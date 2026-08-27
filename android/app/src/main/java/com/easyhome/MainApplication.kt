@@ -12,6 +12,7 @@ import com.easyhome.contacts.ContactsPackage
 import com.easyhome.torch.TorchPackage
 import com.easyhome.camera.CameraPackage
 import com.easyhome.image.ImageCompressorPackage
+import com.easyhome.reminders.ReminderPackage
 
 class MainApplication : Application(), ReactApplication {
 
@@ -27,6 +28,7 @@ class MainApplication : Application(), ReactApplication {
           add(TorchPackage())
           add(CameraPackage())
           add(ImageCompressorPackage())
+          add(ReminderPackage())
         },
     )
   }
