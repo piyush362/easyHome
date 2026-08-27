@@ -1,2 +1,2 @@
 // Shared TypeScript models and definitions barrel
-export {};
+export * from './models';

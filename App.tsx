@@ -2,18 +2,20 @@
  * EasyHome — A simpler phone for the people you love.
  *
  * Phase 1: Android Launcher Foundation
- * - LauncherSetupScreen: Check/set EasyHome as default launcher
- * - MinimalHomeScreen: Placeholder home screen proving launcher works
+ * Phase 2: Project Architecture & Folder Structure
+ * Phase 3: Redux Toolkit & Local Persistence (MMKV)
  *
  * @format
  */
 
-import React from 'react';
+import React, {useEffect} from 'react';
 import {StatusBar, useColorScheme} from 'react-native';
 import {SafeAreaProvider} from 'react-native-safe-area-context';
 import {NavigationContainer} from '@react-navigation/native';
 import {createNativeStackNavigator} from '@react-navigation/native-stack';
+import {Provider} from 'react-redux';
 
+import {store, restoreAppState, useAppDispatch} from './src/store';
 import {LauncherSetupScreen, MinimalHomeScreen} from './src/screens';
 
 export type RootStackParamList = {
@@ -23,8 +25,13 @@ export type RootStackParamList = {
 
 const Stack = createNativeStackNavigator<RootStackParamList>();
 
-function App() {
+function AppContent() {
   const isDarkMode = useColorScheme() === 'dark';
+  const dispatch = useAppDispatch();
+
+  useEffect(() => {
+    dispatch(restoreAppState());
+  }, [dispatch]);
 
   return (
     <SafeAreaProvider>
@@ -44,6 +51,14 @@ function App() {
         </Stack.Navigator>
       </NavigationContainer>
     </SafeAreaProvider>
+  );
+}
+
+function App() {
+  return (
+    <Provider store={store}>
+      <AppContent />
+    </Provider>
   );
 }
 
