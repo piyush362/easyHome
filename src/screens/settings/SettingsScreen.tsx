@@ -10,6 +10,8 @@ import {
   Users,
   ShieldAlert,
   Bell,
+  Clock,
+  LayoutTemplate,
 } from 'lucide-react-native';
 import type {RootStackScreenProps} from '../../navigation/types';
 import {useTheme} from '../../theme';
@@ -42,6 +44,12 @@ export default function SettingsScreen({
             left={<Palette size={22} color={colors.primary} />}
             right={<ChevronRight size={20} color={colors.textMuted} />}
             onPress={() => navigation.navigate('ThemeSettings')}
+          />
+          <EHListItem
+            title="Home Screen"
+            left={<LayoutTemplate size={22} color={colors.primary} />}
+            right={<ChevronRight size={20} color={colors.textMuted} />}
+            onPress={() => navigation.navigate('HomeScreenSettings')}
           />
           <EHListItem
             title="App Drawer & Layout"

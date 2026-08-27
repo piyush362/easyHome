@@ -89,6 +89,7 @@ export type SizeScale = 'large' | 'extraLarge';
 
 export type DrawerColumns = 3 | 4 | 5;
 export type IconShape = 'circle' | 'rounded' | 'square';
+export type ClockStyle = 'frosted' | 'minimal' | 'classic';
 
 export interface AppearanceSettings {
   theme: ColorTheme;
@@ -98,6 +99,7 @@ export interface AppearanceSettings {
   appearance: 'light' | 'dark';
   drawerColumns?: DrawerColumns;
   drawerIconShape?: IconShape;
+  clockStyle?: ClockStyle;
 }
 
 export interface SafetySettings {

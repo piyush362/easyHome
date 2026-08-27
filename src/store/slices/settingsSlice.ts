@@ -5,6 +5,7 @@ import {
   SizeScale,
   DrawerColumns,
   IconShape,
+  ClockStyle,
 } from '../../types/models';
 import {saveAppearance} from '../../database/repository';
 
@@ -16,6 +17,7 @@ export const DEFAULT_APPEARANCE: AppearanceSettings = {
   appearance: 'light',
   drawerColumns: 5,
   drawerIconShape: 'circle',
+  clockStyle: 'frosted',
 };
 
 export interface SettingsState {
@@ -65,6 +67,10 @@ export const settingsSlice = createSlice({
       state.appearance.drawerIconShape = action.payload;
       saveAppearance(state.appearance);
     },
+    setClockStyle: (state, action: PayloadAction<ClockStyle>) => {
+      state.appearance.clockStyle = action.payload;
+      saveAppearance(state.appearance);
+    },
     resetAppearance: state => {
       state.appearance = DEFAULT_APPEARANCE;
       saveAppearance(state.appearance);
@@ -81,6 +87,7 @@ export const {
   setAppearanceMode,
   setDrawerColumns,
   setDrawerIconShape,
+  setClockStyle,
   resetAppearance,
 } = settingsSlice.actions;
 

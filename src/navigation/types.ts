@@ -20,6 +20,8 @@ export type RootStackParamList = {
   Apps: undefined;
   Settings: undefined;
   ThemeSettings: undefined;
+  HomeScreenSettings: undefined;
+  ClockSettings: undefined;
   AppDrawerSettings: undefined;
   ReminderList: undefined;
   AddReminder: undefined;

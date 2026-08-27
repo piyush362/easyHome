@@ -9,6 +9,8 @@ import {
   AppsScreen,
   SettingsScreen,
   ThemeSettingsScreen,
+  HomeScreenSettingsScreen,
+  ClockSettingsScreen,
   AppDrawerSettingsScreen,
   ReminderListScreen,
   AddReminderScreen,
@@ -71,6 +73,16 @@ export default function RootNavigator() {
       <Stack.Screen
         name="ThemeSettings"
         component={ThemeSettingsScreen}
+        options={{animation: 'slide_from_right'}}
+      />
+      <Stack.Screen
+        name="HomeScreenSettings"
+        component={HomeScreenSettingsScreen}
+        options={{animation: 'slide_from_right'}}
+      />
+      <Stack.Screen
+        name="ClockSettings"
+        component={ClockSettingsScreen}
         options={{animation: 'slide_from_right'}}
       />
       <Stack.Screen
