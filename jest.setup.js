@@ -45,6 +45,41 @@ NativeModules.AppDiscoveryModule = {
   isAppInstalled: jest.fn().mockResolvedValue(true),
 };
 
+NativeModules.ContactsModule = {
+  hasContactsPermission: jest.fn().mockResolvedValue(true),
+  hasCallPermission: jest.fn().mockResolvedValue(true),
+  requestContactsPermission: jest.fn().mockResolvedValue(true),
+  getDeviceContacts: jest.fn().mockResolvedValue([
+    {
+      id: 'mock-1',
+      name: 'Alice Family',
+      phoneNumber: '+15551234567',
+      photoUri: null,
+    },
+  ]),
+  makeDirectCall: jest.fn().mockResolvedValue(true),
+  openWhatsApp: jest.fn().mockResolvedValue(true),
+  sendSMS: jest.fn().mockResolvedValue(true),
+};
+
+NativeModules.TorchModule = {
+  isAvailable: jest.fn().mockResolvedValue(true),
+  isTorchActive: jest.fn().mockResolvedValue(false),
+  turnOn: jest.fn().mockResolvedValue(true),
+  turnOff: jest.fn().mockResolvedValue(false),
+  toggle: jest.fn().mockResolvedValue(true),
+};
+
+// Mock react-native-image-picker
+jest.mock('react-native-image-picker', () => ({
+  launchCamera: jest.fn(async (options) => ({
+    assets: [{uri: 'file://mock-photo.jpg', width: 1000, height: 1000}],
+  })),
+  launchImageLibrary: jest.fn(async (options) => ({
+    assets: [{uri: 'file://mock-gallery-photo.jpg', width: 1000, height: 1000}],
+  })),
+}));
+
 // Mock react-native-safe-area-context
 import mockSafeAreaContext from 'react-native-safe-area-context/jest/mock';
 jest.mock('react-native-safe-area-context', () => mockSafeAreaContext);

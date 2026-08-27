@@ -8,6 +8,8 @@ import com.facebook.react.ReactNativeApplicationEntryPoint.loadReactNative
 import com.facebook.react.defaults.DefaultReactHost.getDefaultReactHost
 import com.easyhome.launcher.LauncherPackage
 import com.easyhome.apps.AppDiscoveryPackage
+import com.easyhome.contacts.ContactsPackage
+import com.easyhome.torch.TorchPackage
 
 class MainApplication : Application(), ReactApplication {
 
@@ -19,6 +21,8 @@ class MainApplication : Application(), ReactApplication {
           // Packages that cannot be autolinked yet can be added manually here:
           add(LauncherPackage())
           add(AppDiscoveryPackage())
+          add(ContactsPackage())
+          add(TorchPackage())
         },
     )
   }

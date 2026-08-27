@@ -190,6 +190,13 @@ export default function LauncherSetupScreen({
                     onPress={handleOpenSettings}
                     style={styles.actionBtn}
                   />
+
+                  <EHButton
+                    label="Continue to Home"
+                    variant="ghost"
+                    onPress={() => navigation.replace('Home')}
+                    style={styles.actionBtn}
+                  />
                 </>
               )}
             </View>

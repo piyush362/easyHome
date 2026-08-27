@@ -15,14 +15,13 @@ import FamilySetupNavigator from './FamilySetupNavigator';
 const Stack = createNativeStackNavigator<RootStackParamList>();
 
 export default function RootNavigator() {
-  const launcher = useAppSelector(state => state.launcher.settings);
   const isInitialized = useAppSelector(state => state.app.isInitialized);
+  const launcher = useAppSelector(state => state.launcher.settings);
 
-  // Determine initial route based on setup status and launcher defaults
-  const initialRoute: keyof RootStackParamList =
-    launcher.setupCompleted && launcher.isDefaultLauncher
-      ? 'Home'
-      : 'LauncherSetup';
+  // If default launcher is not set, open LauncherSetup screen first
+  const initialRoute: keyof RootStackParamList = launcher.isDefaultLauncher
+    ? 'Home'
+    : 'LauncherSetup';
 
   return (
     <Stack.Navigator

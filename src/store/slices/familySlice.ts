@@ -22,10 +22,13 @@ export const familySlice = createSlice({
       state.members.push(action.payload);
       saveFamily(state.members);
     },
-    updateMember: (state, action: PayloadAction<FamilyMember>) => {
+    updateMember: (
+      state,
+      action: PayloadAction<Partial<FamilyMember> & {id: string}>,
+    ) => {
       const index = state.members.findIndex(m => m.id === action.payload.id);
       if (index !== -1) {
-        state.members[index] = action.payload;
+        state.members[index] = {...state.members[index], ...action.payload};
         saveFamily(state.members);
       }
     },

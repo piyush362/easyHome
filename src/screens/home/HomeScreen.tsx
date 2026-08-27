@@ -39,6 +39,13 @@ import {
 } from '../../components';
 import {PixelAppDrawer, PixelAppDrawerRef} from '../../components/apps';
 import {useAppSelector} from '../../store';
+import {
+  ContactsService,
+  CameraService,
+  GalleryService,
+  TorchService,
+  AppsService,
+} from '../../services';
 import {FamilyMember} from '../../types/models';
 import type {RootStackScreenProps} from '../../navigation/types';
 
@@ -104,6 +111,7 @@ export default function HomeScreen({navigation}: RootStackScreenProps<'Home'>) {
   useEffect(() => {
     updateTime();
     const interval = setInterval(updateTime, 1000);
+    TorchService.isTorchActive().then(setTorchActive).catch(() => {});
     return () => clearInterval(interval);
   }, [updateTime]);
 
@@ -139,7 +147,9 @@ export default function HomeScreen({navigation}: RootStackScreenProps<'Home'>) {
   useFocusEffect(
     useCallback(() => {
       // Always scroll to top when navigating to or focusing main home screen
-      scrollViewRef.current?.scrollTo({y: 0, animated: false});
+      requestAnimationFrame(() => {
+        scrollViewRef.current?.scrollTo({y: 0, animated: false});
+      });
 
       const onBackPress = () => {
         if (appDrawerRef.current?.isOpen()) {
@@ -166,57 +176,115 @@ export default function HomeScreen({navigation}: RootStackScreenProps<'Home'>) {
     }, [selectedFamilyMember, sosModalVisible]),
   );
 
-  // Action handlers (mock calls)
-  const handleCall = (member: FamilyMember) => {
-    console.log(`[Home Call] Calling ${member.name} (${member.phoneNumber})`);
+  // Real Action handlers with native calling and messaging
+  const handleCall = async (member: FamilyMember) => {
     setSelectedFamilyMember(null);
-    Alert.alert(
-      'Calling ' + member.name,
-      `Dialing ${member.phoneNumber}...\n\n(Native dialer integration in Phase 8)`,
-    );
+    try {
+      await ContactsService.makeDirectCall(member.phoneNumber);
+    } catch (error: any) {
+      Alert.alert(
+        'Cannot Call',
+        `Failed to call ${member.name}.\n\nError: ${error?.message || 'Unknown'}`,
+      );
+    }
   };
 
-  const handleWhatsApp = (member: FamilyMember) => {
-    console.log(`[Home WhatsApp] Opening chat with ${member.name}`);
+  const handleWhatsApp = async (member: FamilyMember) => {
     setSelectedFamilyMember(null);
-    Alert.alert(
-      'WhatsApp with ' + member.name,
-      `Opening WhatsApp conversation...\n\n(Native WhatsApp integration in Phase 8)`,
-    );
+    try {
+      await ContactsService.openWhatsApp(member.phoneNumber);
+    } catch (error: any) {
+      Alert.alert(
+        'Cannot Open WhatsApp',
+        `Failed to open WhatsApp with ${member.name}.\n\nError: ${
+          error?.message || 'Please make sure WhatsApp is installed.'
+        }`,
+      );
+    }
   };
 
-  const handleVideoCall = (member: FamilyMember) => {
-    console.log(`[Home Video Call] Video calling ${member.name}`);
+  const handleVideoCall = async (member: FamilyMember) => {
     setSelectedFamilyMember(null);
-    Alert.alert(
-      'Video Call with ' + member.name,
-      `Starting video call with ${member.name}...\n\n(Native Video call in Phase 8)`,
-    );
+    try {
+      await ContactsService.openWhatsApp(member.phoneNumber);
+    } catch (error: any) {
+      Alert.alert(
+        'Video Call',
+        `Starting video call with ${member.name}...\n\nError: ${error?.message}`,
+      );
+    }
   };
 
-  const handleCameraAction = (mode: string) => {
-    console.log(`[Camera] Opening camera in ${mode} mode`);
-    Alert.alert(
-      'Camera — ' + mode,
-      `Launching ${mode} mode...\n\n(Native Camera Module in Phase 9)`,
-    );
+  // Native Camera Actions (Photo, Selfie, Video)
+  const handleCameraAction = async (mode: string) => {
+    try {
+      if (mode === 'Photo') {
+        const result = await CameraService.takePhoto();
+        if (result.error) {
+          Alert.alert('Camera Error', result.error);
+        }
+      } else if (mode === 'Selfie') {
+        const result = await CameraService.takeSelfie();
+        if (result.error) {
+          Alert.alert('Camera Error', result.error);
+        }
+      } else if (mode === 'Video') {
+        const result = await CameraService.recordVideo();
+        if (result.error) {
+          Alert.alert('Camera Error', result.error);
+        }
+      }
+    } catch (error: any) {
+      Alert.alert('Camera', 'Could not open camera: ' + error?.message);
+    }
   };
 
-  const handleEntertainmentAction = (name: string) => {
-    console.log(`[Entertainment] Opening ${name}`);
-    Alert.alert(
-      name,
-      `Opening ${name}...\n\n(Direct app launcher in Phase 7)`,
-    );
+  // Entertainment Actions (YouTube & Gallery)
+  const handleEntertainmentAction = async (name: string) => {
+    try {
+      if (name === 'YouTube') {
+        const isInstalled = await AppsService.isAppInstalled('com.google.android.youtube');
+        if (isInstalled) {
+          await AppsService.launchApp('com.google.android.youtube');
+        } else {
+          await AppsService.launchApp('com.android.chrome');
+        }
+      } else if (name === 'Gallery') {
+        const result = await GalleryService.openGallery();
+        if (result.error) {
+          Alert.alert('Gallery Error', result.error);
+        }
+      }
+    } catch (error: any) {
+      Alert.alert(name, 'Could not open ' + name + ': ' + error?.message);
+    }
   };
 
-  const handleSosTrigger = () => {
-    console.log(`[Emergency SOS] Alerting ${primaryContact.name}`);
+  // Torch Toggle
+  const handleTorchToggle = async () => {
+    try {
+      const isAvailable = await TorchService.isAvailable();
+      if (!isAvailable) {
+        Alert.alert('Flashlight', 'Flashlight hardware is not available on this device.');
+        return;
+      }
+      const newState = await TorchService.toggle();
+      setTorchActive(newState);
+    } catch (error: any) {
+      Alert.alert('Flashlight', 'Could not toggle flashlight: ' + error?.message);
+    }
+  };
+
+  const handleSosTrigger = async () => {
     setSosModalVisible(false);
-    Alert.alert(
-      '🚨 Calling ' + primaryContact.name,
-      `Calling emergency contact ${primaryContact.name} (${primaryContact.phoneNumber}) and sending location alerts!`,
-    );
+    try {
+      await ContactsService.makeDirectCall(primaryContact.phoneNumber);
+    } catch (error: any) {
+      Alert.alert(
+        'Emergency Alert',
+        `Calling emergency contact ${primaryContact.name} (${primaryContact.phoneNumber})...`,
+      );
+    }
   };
 
   const topPadding = insets.top > 0 ? insets.top + 10 : 28;
@@ -439,7 +507,7 @@ export default function HomeScreen({navigation}: RootStackScreenProps<'Home'>) {
               backgroundColor={
                 torchActive ? colors.warningLight : colors.surface
               }
-              onPress={() => setTorchActive(!torchActive)}
+              onPress={handleTorchToggle}
             />
           </View>
         </EHSection>

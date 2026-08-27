@@ -744,6 +744,8 @@ Allow EasyHome to discover all installed apps on the device and launch them. Sep
 
 ## Phase 8 — Family & Contacts
 
+> **Status**: ✅ COMPLETED
+
 ### Goal
 
 Implement the family contacts system. Family members appear on the Home screen and can be called, messaged, or WhatsApp'd directly.
@@ -785,17 +787,19 @@ Register package, update `MainApplication.kt`.
 
 ### Completion Criteria
 
-- [ ] Can pick contacts from the device.
-- [ ] Can add/edit/remove family members.
-- [ ] Family members appear on the Home screen.
-- [ ] Tapping a family member → can call them.
-- [ ] WhatsApp action works (if WhatsApp installed).
-- [ ] Data persists across app restarts.
-- [ ] Handles contacts permission denial gracefully.
+- [x] Can pick contacts from the device.
+- [x] Can add/edit/remove family members.
+- [x] Family members appear on the Home screen.
+- [x] Tapping a family member → can call them.
+- [x] WhatsApp action works (if WhatsApp installed).
+- [x] Data persists across app restarts.
+- [x] Handles contacts permission denial gracefully.
 
 ---
 
 ## Phase 9 — Camera, Photos & Torch
+
+> **Status**: ✅ COMPLETED
 
 ### Goal
 
@@ -847,12 +851,12 @@ Register package, update `MainApplication.kt`.
 
 ### Completion Criteria
 
-- [ ] 📸 Photo opens back camera, takes photo.
-- [ ] 🤳 Selfie opens front camera, takes photo.
-- [ ] 🎥 Video opens camera in video mode.
-- [ ] 🖼️ Photos opens gallery.
-- [ ] 🔦 Torch turns on/off.
-- [ ] Handles missing camera/flash hardware gracefully.
+- [x] 📸 Photo opens back camera, takes photo.
+- [x] 🤳 Selfie opens front camera, takes photo.
+- [x] 🎥 Video opens camera in video mode.
+- [x] 🖼️ Photos opens gallery.
+- [x] 🔦 Torch turns on/off.
+- [x] Handles missing camera/flash hardware gracefully.
 
 ---
 

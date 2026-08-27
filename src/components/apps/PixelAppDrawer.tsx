@@ -26,7 +26,6 @@ import BottomSheet, {
   BottomSheetBackdropProps,
 } from '@gorhom/bottom-sheet';
 import {useSafeAreaInsets} from 'react-native-safe-area-context';
-import {BlurView} from '@react-native-community/blur';
 import {RotateCw, Search, X} from 'lucide-react-native';
 import {useTheme} from '../../theme';
 import {useAppDispatch, useAppSelector, fetchInstalledApps} from '../../store';
@@ -198,7 +197,7 @@ export const PixelAppDrawer = forwardRef<PixelAppDrawerRef, PixelAppDrawerProps>
       }
     };
 
-    // Custom Backdrop with frosted blur
+    // Custom Backdrop with clean dark overlay
     const renderBackdrop = useCallback(
       (backdropProps: BottomSheetBackdropProps) => (
         <BottomSheetBackdrop
@@ -206,18 +205,10 @@ export const PixelAppDrawer = forwardRef<PixelAppDrawerRef, PixelAppDrawerProps>
           appearsOnIndex={0}
           disappearsOnIndex={-1}
           pressBehavior="close"
-          opacity={0.7}>
-          {Platform.OS === 'android' && (
-            <BlurView
-              style={StyleSheet.absoluteFill}
-              blurType={isDark ? 'dark' : 'light'}
-              blurAmount={20}
-              overlayColor="transparent"
-            />
-          )}
-        </BottomSheetBackdrop>
+          opacity={0.65}
+        />
       ),
-      [isDark],
+      [],
     );
 
     const renderAppItem = ({item}: {item: InstalledApp}) => {
