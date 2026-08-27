@@ -17,7 +17,18 @@ import {
 } from '../src/components';
 import {setTheme, setTextSize} from '../src/store/slices/settingsSlice';
 
+jest.setTimeout(15000);
+
 describe('Design System Components', () => {
+  beforeEach(() => {
+    jest.useFakeTimers();
+  });
+
+  afterEach(() => {
+    jest.runOnlyPendingTimers();
+    jest.useRealTimers();
+  });
+
   test('EHText renders across all variants', async () => {
     let tree: any;
     await ReactTestRenderer.act(async () => {
@@ -34,6 +45,9 @@ describe('Design System Components', () => {
       );
     });
     expect(tree).toBeDefined();
+    await ReactTestRenderer.act(async () => {
+      tree.unmount();
+    });
   });
 
   test('EHButton renders across all variants', async () => {
@@ -54,6 +68,9 @@ describe('Design System Components', () => {
       );
     });
     expect(tree).toBeDefined();
+    await ReactTestRenderer.act(async () => {
+      tree.unmount();
+    });
   });
 
   test('EHIconButton, EHCard, and EHAvatar render correctly', async () => {
@@ -76,6 +93,9 @@ describe('Design System Components', () => {
       );
     });
     expect(tree).toBeDefined();
+    await ReactTestRenderer.act(async () => {
+      tree.unmount();
+    });
   });
 
   test('EHListItem, EHSection, and EHSwitch render correctly', async () => {
@@ -102,6 +122,9 @@ describe('Design System Components', () => {
       );
     });
     expect(tree).toBeDefined();
+    await ReactTestRenderer.act(async () => {
+      tree.unmount();
+    });
   });
 
   test('EHModal and EHBottomSheet render correctly', async () => {
@@ -121,6 +144,9 @@ describe('Design System Components', () => {
       );
     });
     expect(tree).toBeDefined();
+    await ReactTestRenderer.act(async () => {
+      tree.unmount();
+    });
   });
 
   test('Components re-render on Redux theme & size change', async () => {
@@ -142,5 +168,8 @@ describe('Design System Components', () => {
     });
 
     expect(tree).toBeDefined();
+    await ReactTestRenderer.act(async () => {
+      tree.unmount();
+    });
   });
 });

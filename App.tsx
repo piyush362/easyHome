@@ -1,22 +1,18 @@
 /**
  * EasyHome — A simpler phone for the people you love.
  *
- * Phase 1: Android Launcher Foundation
- * Phase 2: Project Architecture & Folder Structure
- * Phase 3: Redux Toolkit & Local Persistence (MMKV)
- * Phase 4: Navigation Architecture
- * Phase 5: EasyHome Design System
- *
  * @format
  */
 
 import React, {useEffect} from 'react';
-import {StatusBar} from 'react-native';
+import {StatusBar, StyleSheet} from 'react-native';
 import {SafeAreaProvider} from 'react-native-safe-area-context';
 import {NavigationContainer} from '@react-navigation/native';
 import {Provider} from 'react-redux';
+import {GestureHandlerRootView} from 'react-native-gesture-handler';
+import {BottomSheetModalProvider} from '@gorhom/bottom-sheet';
 
-import {store, restoreAppState, useAppDispatch} from './src/store';
+import {store, restoreAppState, fetchInstalledApps, useAppDispatch} from './src/store';
 import {ThemeProvider, useTheme} from './src/theme';
 import {RootNavigator} from './src/navigation';
 
@@ -25,18 +21,30 @@ function AppContent() {
   const dispatch = useAppDispatch();
 
   useEffect(() => {
+    // Restore persistent store and prefetch installed apps in background on app startup
     dispatch(restoreAppState());
+    dispatch(fetchInstalledApps(false));
   }, [dispatch]);
 
   return (
-    <SafeAreaProvider>
-      <StatusBar barStyle={colors.statusBar} />
-      <NavigationContainer>
-        <RootNavigator />
-      </NavigationContainer>
-    </SafeAreaProvider>
+    <GestureHandlerRootView style={styles.root}>
+      <SafeAreaProvider>
+        <BottomSheetModalProvider>
+          <StatusBar barStyle={colors.statusBar} />
+          <NavigationContainer>
+            <RootNavigator />
+          </NavigationContainer>
+        </BottomSheetModalProvider>
+      </SafeAreaProvider>
+    </GestureHandlerRootView>
   );
 }
+
+const styles = StyleSheet.create({
+  root: {
+    flex: 1,
+  },
+});
 
 function App() {
   return (

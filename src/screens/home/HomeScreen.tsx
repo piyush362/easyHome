@@ -1,4 +1,4 @@
-import React, {useState, useEffect, useCallback} from 'react';
+import React, {useState, useEffect, useCallback, useRef} from 'react';
 import {
   View,
   Text,
@@ -11,8 +11,10 @@ import {
 import {useFocusEffect} from '@react-navigation/native';
 import type {RootStackScreenProps} from '../../navigation/types';
 import {useAppSelector} from '../../store';
+import {PixelAppDrawer, PixelAppDrawerRef} from '../../components';
 
 export default function HomeScreen({navigation}: RootStackScreenProps<'Home'>) {
+  const appDrawerRef = useRef<PixelAppDrawerRef>(null);
   const [currentTime, setCurrentTime] = useState('');
   const [currentDate, setCurrentDate] = useState('');
   const appearance = useAppSelector(state => state.settings.appearance);
@@ -108,7 +110,7 @@ export default function HomeScreen({navigation}: RootStackScreenProps<'Home'>) {
 
           <TouchableOpacity
             style={[styles.navCard, {backgroundColor: '#E3F2FD'}]}
-            onPress={() => navigation.navigate('Apps')}
+            onPress={() => appDrawerRef.current?.open()}
             activeOpacity={0.8}>
             <Text style={styles.cardEmoji}>📱</Text>
             <Text style={styles.cardTitle}>All Apps</Text>
@@ -152,6 +154,9 @@ export default function HomeScreen({navigation}: RootStackScreenProps<'Home'>) {
           </Text>
         </TouchableOpacity>
       </ScrollView>
+
+      {/* Pixel UI App Drawer BottomSheet */}
+      <PixelAppDrawer ref={appDrawerRef} />
     </View>
   );
 }
