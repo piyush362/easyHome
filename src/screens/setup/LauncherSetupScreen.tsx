@@ -10,20 +10,15 @@ import {
   ActivityIndicator,
   Alert,
 } from 'react-native';
-import type {NativeStackNavigationProp} from '@react-navigation/native-stack';
+import type {RootStackScreenProps} from '../../navigation/types';
+import {useAppDispatch, setIsDefault as setLauncherDefaultAction} from '../../store';
 
 const {LauncherModule} = NativeModules;
 
-type RootStackParamList = {
-  LauncherSetup: undefined;
-  MinimalHome: undefined;
-};
-
-type Props = {
-  navigation: NativeStackNavigationProp<RootStackParamList, 'LauncherSetup'>;
-};
-
-export default function LauncherSetupScreen({navigation}: Props) {
+export default function LauncherSetupScreen({
+  navigation,
+}: RootStackScreenProps<'LauncherSetup'>) {
+  const dispatch = useAppDispatch();
   const [isDefault, setIsDefault] = useState<boolean | null>(null);
   const [loading, setLoading] = useState(true);
 
@@ -32,14 +27,16 @@ export default function LauncherSetupScreen({navigation}: Props) {
       setLoading(true);
       const result = await LauncherModule.isDefaultLauncher();
       setIsDefault(result);
+      dispatch(setLauncherDefaultAction(Boolean(result)));
     } catch (error: any) {
       console.warn('Failed to check launcher status:', error);
       Alert.alert('Error', 'Failed to check launcher status: ' + error?.message);
       setIsDefault(false);
+      dispatch(setLauncherDefaultAction(false));
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [dispatch]);
 
   // Check launcher status on mount
   useEffect(() => {
@@ -84,7 +81,7 @@ export default function LauncherSetupScreen({navigation}: Props) {
   };
 
   const handleContinue = () => {
-    navigation.replace('MinimalHome');
+    navigation.replace('Home');
   };
 
   if (loading) {

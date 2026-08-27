@@ -1,2 +1,1 @@
-// Family contacts screens barrel
-export {};
+export {default as FamilyScreen} from './FamilyScreen';

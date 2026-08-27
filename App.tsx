@@ -4,6 +4,7 @@
  * Phase 1: Android Launcher Foundation
  * Phase 2: Project Architecture & Folder Structure
  * Phase 3: Redux Toolkit & Local Persistence (MMKV)
+ * Phase 4: Navigation Architecture
  *
  * @format
  */
@@ -12,18 +13,10 @@ import React, {useEffect} from 'react';
 import {StatusBar, useColorScheme} from 'react-native';
 import {SafeAreaProvider} from 'react-native-safe-area-context';
 import {NavigationContainer} from '@react-navigation/native';
-import {createNativeStackNavigator} from '@react-navigation/native-stack';
 import {Provider} from 'react-redux';
 
 import {store, restoreAppState, useAppDispatch} from './src/store';
-import {LauncherSetupScreen, MinimalHomeScreen} from './src/screens';
-
-export type RootStackParamList = {
-  LauncherSetup: undefined;
-  MinimalHome: undefined;
-};
-
-const Stack = createNativeStackNavigator<RootStackParamList>();
+import {RootNavigator} from './src/navigation';
 
 function AppContent() {
   const isDarkMode = useColorScheme() === 'dark';
@@ -37,18 +30,7 @@ function AppContent() {
     <SafeAreaProvider>
       <StatusBar barStyle={isDarkMode ? 'light-content' : 'dark-content'} />
       <NavigationContainer>
-        <Stack.Navigator
-          initialRouteName="LauncherSetup"
-          screenOptions={{
-            headerShown: false,
-            animation: 'fade',
-          }}>
-          <Stack.Screen
-            name="LauncherSetup"
-            component={LauncherSetupScreen}
-          />
-          <Stack.Screen name="MinimalHome" component={MinimalHomeScreen} />
-        </Stack.Navigator>
+        <RootNavigator />
       </NavigationContainer>
     </SafeAreaProvider>
   );

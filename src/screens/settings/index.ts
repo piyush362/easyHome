@@ -1,2 +1,1 @@
-// Settings screen barrel
-export {};
+export {default as SettingsScreen} from './SettingsScreen';

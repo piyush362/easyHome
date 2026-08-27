@@ -1,2 +1,1 @@
-// Apps screen barrel
-export {};
+export {default as AppsScreen} from './AppsScreen';

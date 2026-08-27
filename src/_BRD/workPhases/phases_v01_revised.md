@@ -445,6 +445,8 @@ No UI changes. No new screens. No native modules. Only state and persistence.
 
 ## Phase 4 — Navigation Architecture
 
+> **Status**: ✅ COMPLETED
+
 ### Goal
 
 Create the complete navigation structure for the entire app. After this phase, every screen area has a route — even if the screen is a placeholder.
@@ -521,11 +523,11 @@ No actual screen content beyond placeholders. No forms. No data entry.
 
 ### Completion Criteria
 
-- [ ] Every route in `RootStackParamList` and `FamilySetupStackParamList` renders a screen.
-- [ ] Navigation between screens works.
-- [ ] Back button behavior is correct (blocked on Home, works in setup wizard).
-- [ ] TypeScript compiles.
-- [ ] App builds and runs.
+- [x] Every route in `RootStackParamList` and `FamilySetupStackParamList` renders a screen.
+- [x] Navigation between screens works.
+- [x] Back button behavior is correct (blocked on Home, works in setup wizard).
+- [x] TypeScript compiles.
+- [x] App builds and runs.
 
 ---
 
