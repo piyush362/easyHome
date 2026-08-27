@@ -19,16 +19,4 @@ class MainActivity : ReactActivity() {
    */
   override fun createReactActivityDelegate(): ReactActivityDelegate =
       DefaultReactActivityDelegate(this, mainComponentName, fabricEnabled)
-
-  /**
-   * Override onBackPressed to prevent the launcher from being dismissed.
-   * Standard launcher behavior: pressing Back on the home screen does nothing.
-   * The launcher should only be exited by switching to another launcher via settings.
-   */
-  @Deprecated("Deprecated in Java")
-  override fun onBackPressed() {
-    // Do not call super.onBackPressed() — launchers should not exit on back press.
-    // This prevents the user from accidentally leaving the launcher.
-    // The activity remains in place, which is the expected behavior for any Android Home app.
-  }
 }

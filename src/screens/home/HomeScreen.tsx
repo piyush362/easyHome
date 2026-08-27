@@ -6,7 +6,9 @@ import {
   StyleSheet,
   StatusBar,
   ScrollView,
+  BackHandler,
 } from 'react-native';
+import {useFocusEffect} from '@react-navigation/native';
 import type {RootStackScreenProps} from '../../navigation/types';
 import {useAppSelector} from '../../store';
 
@@ -15,6 +17,22 @@ export default function HomeScreen({navigation}: RootStackScreenProps<'Home'>) {
   const [currentDate, setCurrentDate] = useState('');
   const appearance = useAppSelector(state => state.settings.appearance);
   const homeActions = useAppSelector(state => state.home.actions);
+
+  // Prevent exiting launcher when pressing Back on the Home screen
+  useFocusEffect(
+    useCallback(() => {
+      const onBackPress = () => {
+        return true; // Consume event on Home screen
+      };
+
+      const subscription = BackHandler.addEventListener(
+        'hardwareBackPress',
+        onBackPress,
+      );
+
+      return () => subscription.remove();
+    }, []),
+  );
 
   const updateTime = useCallback(() => {
     const now = new Date();

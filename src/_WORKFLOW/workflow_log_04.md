@@ -64,12 +64,20 @@ This document tracks the implementation of Phase 4: Navigation Architecture.
 #### Task 6: Testing & Verification
 - **`__tests__/navigation.test.tsx`**: Created unit tests verifying rendering and navigation across RootNavigator, FamilySetupNavigator, HomeScreen, and wizard screens.
 
+#### Task 7: System & Hardware Back Button Fix
+- **Problem**: `MainActivity.kt` had an empty `onBackPressed()` override which completely silenced hardware back events across the entire application.
+- **Fix**:
+  - Removed the empty `onBackPressed()` override from `MainActivity.kt` so React Native and `@react-navigation` receive system back button events normally.
+  - Added focused `BackHandler` on `HomeScreen` (and `MinimalHomeScreen`) returning `true` exclusively when on the Home screen to prevent the launcher from exiting or finishing when at the root.
+  - System back button now works on all nested screens (Family, Apps, Settings, Wizard steps 1-8, modals) returning to the previous screen.
+
 ---
 
 ### Files Changed Summary
 
 | Action | File | Purpose |
 |--------|------|---------|
+| MODIFY | `android/.../MainActivity.kt` | Restored hardware back button event propagation |
 | NEW | `src/navigation/types.ts` | Type definitions for root & wizard stacks |
 | NEW | `src/navigation/FamilySetupNavigator.tsx` | Wizard nested stack navigator |
 | NEW | `src/navigation/RootNavigator.tsx` | App root stack navigator |

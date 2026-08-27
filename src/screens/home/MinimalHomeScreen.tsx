@@ -5,6 +5,7 @@ import {
   StyleSheet,
   NativeModules,
   StatusBar,
+  BackHandler,
 } from 'react-native';
 
 const {LauncherModule} = NativeModules;
@@ -13,6 +14,16 @@ export default function MinimalHomeScreen() {
   const [currentTime, setCurrentTime] = useState('');
   const [currentDate, setCurrentDate] = useState('');
   const [isDefault, setIsDefault] = useState<boolean | null>(null);
+
+  // Prevent exiting on root home screen
+  useEffect(() => {
+    const onBackPress = () => true;
+    const subscription = BackHandler.addEventListener(
+      'hardwareBackPress',
+      onBackPress,
+    );
+    return () => subscription.remove();
+  }, []);
 
   // Update the clock every second
   const updateTime = useCallback(() => {

@@ -48,7 +48,9 @@ describe('Navigation Architecture', () => {
     await ReactTestRenderer.act(async () => {
       tree = ReactTestRenderer.create(
         <Provider store={store}>
-          <HomeScreen navigation={mockNav} route={{} as any} />
+          <NavigationContainer>
+            <HomeScreen navigation={mockNav} route={{} as any} />
+          </NavigationContainer>
         </Provider>,
       );
     });
