@@ -25,6 +25,7 @@ import {
   GalleryService,
   TorchService,
   AppsService,
+  ReminderService,
 } from '../../services';
 import { FamilyMember, Reminder } from '../../types/models';
 import type { RootStackScreenProps } from '../../navigation/types';
@@ -118,18 +119,21 @@ export default function HomeScreen({
   }, [familyMembers]);
 
   // Next active reminder
-  const nextReminder: Reminder = useMemo(() => {
+  const nextReminder: Reminder | null = useMemo(() => {
     return (
-      reminders.find(r => r.enabled) || {
-        id: 'default',
-        title: 'Blood Pressure Tablet',
-        description: 'Scheduled reminder',
-        time: '1:00 PM',
-        type: 'medicine',
-        recurring: true,
-        recurringPattern: 'daily',
-        enabled: true,
-      }
+      ReminderService.getNextUpcomingReminder(reminders) ||
+      (reminders.length === 0
+        ? {
+            id: 'default',
+            title: 'Blood Pressure Tablet',
+            description: 'Daily medication reminder',
+            time: '1:00 PM',
+            type: 'medicine',
+            recurring: true,
+            recurringPattern: 'daily',
+            enabled: true,
+          }
+        : null)
     );
   }, [reminders]);
 
@@ -356,6 +360,7 @@ export default function HomeScreen({
           reminder={nextReminder}
           torchActive={torchActive}
           onTorchToggle={handleTorchToggle}
+          onReminderPress={() => navigation.navigate('ReminderList')}
         />
 
         {/* 7. Emergency SOS Section */}

@@ -21,6 +21,9 @@ export type RootStackParamList = {
   Settings: undefined;
   ThemeSettings: undefined;
   AppDrawerSettings: undefined;
+  ReminderList: undefined;
+  AddReminder: undefined;
+  EditReminder: {reminderId: string};
   ComponentShowcase: undefined;
   FamilySetup: NavigatorScreenParams<FamilySetupStackParamList> | undefined;
 };

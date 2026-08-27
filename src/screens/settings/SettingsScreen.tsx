@@ -9,6 +9,7 @@ import {
   LayoutGrid,
   Users,
   ShieldAlert,
+  Bell,
 } from 'lucide-react-native';
 import type {RootStackScreenProps} from '../../navigation/types';
 import {useTheme} from '../../theme';
@@ -57,6 +58,12 @@ export default function SettingsScreen({
             left={<Users size={22} color={colors.primary} />}
             right={<ChevronRight size={20} color={colors.textMuted} />}
             onPress={() => navigation.navigate('Family')}
+          />
+          <EHListItem
+            title="Daily Reminders"
+            left={<Bell size={22} color={colors.primary} />}
+            right={<ChevronRight size={20} color={colors.textMuted} />}
+            onPress={() => navigation.navigate('ReminderList')}
           />
           <EHListItem
             title="Emergency SOS Contacts"

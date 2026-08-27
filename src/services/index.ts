@@ -5,3 +5,4 @@ export * from './CameraService';
 export * from './GalleryService';
 export * from './TorchService';
 export * from './ImageCompressorService';
+export * from './ReminderService';

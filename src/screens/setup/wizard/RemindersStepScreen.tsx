@@ -33,25 +33,33 @@ export default function RemindersStepScreen({
             Active Reminders ({reminders.length})
           </EHText>
 
-          {reminders.map(rem => (
-            <View key={rem.id} style={styles.reminderRow}>
-              <View
-                style={[
-                  styles.iconBox,
-                  {backgroundColor: colors.primaryLight},
-                ]}>
-                <Clock size={20} color={colors.primary} />
-              </View>
-              <View style={styles.reminderInfo}>
-                <EHText variant="body" weight="700">
-                  {rem.title}
-                </EHText>
-                <EHText variant="caption" color={colors.textSecondary}>
-                  {rem.time} • {rem.description}
-                </EHText>
-              </View>
+          {reminders.length === 0 ? (
+            <View style={styles.emptyState}>
+              <EHText variant="body" color={colors.textSecondary} align="center">
+                No reminders scheduled yet. You can add medicines and alerts in Settings anytime.
+              </EHText>
             </View>
-          ))}
+          ) : (
+            reminders.map(rem => (
+              <View key={rem.id} style={styles.reminderRow}>
+                <View
+                  style={[
+                    styles.iconBox,
+                    {backgroundColor: colors.primaryLight},
+                  ]}>
+                  <Clock size={20} color={colors.primary} />
+                </View>
+                <View style={styles.reminderInfo}>
+                  <EHText variant="body" weight="700">
+                    {rem.title}
+                  </EHText>
+                  <EHText variant="caption" color={colors.textSecondary}>
+                    {rem.time} • {rem.description || 'Scheduled reminder'}
+                  </EHText>
+                </View>
+              </View>
+            ))
+          )}
         </EHCard>
 
         {/* Action buttons */}
@@ -83,6 +91,9 @@ const styles = StyleSheet.create({
   card: {
     padding: 18,
     gap: 14,
+  },
+  emptyState: {
+    paddingVertical: 12,
   },
   reminderRow: {
     flexDirection: 'row',

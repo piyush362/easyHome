@@ -10,6 +10,9 @@ import {
   SettingsScreen,
   ThemeSettingsScreen,
   AppDrawerSettingsScreen,
+  ReminderListScreen,
+  AddReminderScreen,
+  EditReminderScreen,
   ComponentShowcaseScreen,
 } from '../screens';
 import FamilySetupNavigator from './FamilySetupNavigator';
@@ -44,6 +47,21 @@ export default function RootNavigator() {
         name="Apps"
         component={AppsScreen}
         options={{animation: 'slide_from_bottom'}}
+      />
+      <Stack.Screen
+        name="ReminderList"
+        component={ReminderListScreen}
+        options={{animation: 'slide_from_right'}}
+      />
+      <Stack.Screen
+        name="AddReminder"
+        component={AddReminderScreen}
+        options={{animation: 'slide_from_bottom'}}
+      />
+      <Stack.Screen
+        name="EditReminder"
+        component={EditReminderScreen}
+        options={{animation: 'slide_from_right'}}
       />
       <Stack.Screen
         name="Settings"

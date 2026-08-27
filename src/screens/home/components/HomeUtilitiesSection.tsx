@@ -7,10 +7,11 @@ import {Reminder} from '../../../types/models';
 import {ICONS} from '../../../assets';
 
 export interface HomeUtilitiesSectionProps {
-  reminder: Reminder;
+  reminder: Reminder | null;
   torchActive: boolean;
   onTorchToggle: () => void;
   onReminderDone?: () => void;
+  onReminderPress?: () => void;
 }
 
 export function HomeUtilitiesSection({
@@ -18,6 +19,7 @@ export function HomeUtilitiesSection({
   torchActive,
   onTorchToggle,
   onReminderDone,
+  onReminderPress,
 }: HomeUtilitiesSectionProps) {
   const {colors, borderRadius, isDark} = useTheme();
 
@@ -40,40 +42,78 @@ export function HomeUtilitiesSection({
 
       <View style={styles.utilitiesStack}>
         {/* Medication / Reminder Tile */}
-        <View
-          style={[
-            styles.reminderTile,
-            {
-              backgroundColor: colors.surface,
-              borderColor: colors.border,
-              borderRadius: borderRadius.md,
-            },
-          ]}>
-          <View
+        {reminder ? (
+          <TouchableOpacity
+            activeOpacity={0.85}
+            onPress={onReminderPress}
             style={[
-              styles.reminderIconCircle,
-              {backgroundColor: colors.primaryLight},
+              styles.reminderTile,
+              {
+                backgroundColor: colors.surface,
+                borderColor: colors.border,
+                borderRadius: borderRadius.md,
+              },
             ]}>
-            <Pill size={24} color={colors.primary} />
-          </View>
-          <View style={styles.reminderTextCol}>
-            <EHText variant="caption" color={colors.primary} weight="700">
-              UPCOMING REMINDER
-            </EHText>
-            <EHText variant="body" weight="700">
-              {reminder.title}
-            </EHText>
-            <EHText variant="caption" color={colors.textSecondary}>
-              Scheduled for {reminder.time}
-            </EHText>
-          </View>
-          <EHButton
-            label="Done"
-            variant="outline"
-            onPress={handleReminderDone}
-            style={styles.reminderDoneBtn}
-          />
-        </View>
+            <View
+              style={[
+                styles.reminderIconCircle,
+                {backgroundColor: colors.primaryLight},
+              ]}>
+              <Pill size={24} color={colors.primary} />
+            </View>
+            <View style={styles.reminderTextCol}>
+              <EHText variant="caption" color={colors.primary} weight="700">
+                UPCOMING REMINDER
+              </EHText>
+              <EHText variant="body" weight="700" numberOfLines={1}>
+                {reminder.title}
+              </EHText>
+              <EHText variant="caption" color={colors.textSecondary}>
+                Scheduled for {reminder.time}
+              </EHText>
+            </View>
+            <EHButton
+              label="Done"
+              variant="outline"
+              onPress={handleReminderDone}
+              style={styles.reminderDoneBtn}
+            />
+          </TouchableOpacity>
+        ) : (
+          <TouchableOpacity
+            activeOpacity={0.85}
+            onPress={onReminderPress}
+            style={[
+              styles.reminderTile,
+              {
+                backgroundColor: colors.surface,
+                borderColor: colors.border,
+                borderRadius: borderRadius.md,
+              },
+            ]}>
+            <View
+              style={[
+                styles.reminderIconCircle,
+                {backgroundColor: colors.primaryLight},
+              ]}>
+              <Pill size={24} color={colors.primary} />
+            </View>
+            <View style={styles.reminderTextCol}>
+              <EHText variant="body" weight="700">
+                Daily Reminders
+              </EHText>
+              <EHText variant="caption" color={colors.textSecondary}>
+                Tap to schedule medicines or water alerts
+              </EHText>
+            </View>
+            <EHButton
+              label="+ Add"
+              variant="outline"
+              onPress={onReminderPress || (() => {})}
+              style={styles.reminderDoneBtn}
+            />
+          </TouchableOpacity>
+        )}
 
         {/* Horizontal Flashlight / Torch Card */}
         <TouchableOpacity
