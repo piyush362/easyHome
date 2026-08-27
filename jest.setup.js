@@ -86,6 +86,16 @@ jest.mock('lucide-react-native', () => {
   );
 });
 
+// Mock react-native-keyboard-aware-scroll-view
+jest.mock('react-native-keyboard-aware-scroll-view', () => {
+  const React = require('react');
+  const {ScrollView} = require('react-native');
+  return {
+    KeyboardAwareScrollView: (props: any) =>
+      React.createElement(ScrollView, props, props.children),
+  };
+});
+
 // Mock react-native-gesture-handler
 jest.mock('react-native-gesture-handler', () => {
   const React = require('react');

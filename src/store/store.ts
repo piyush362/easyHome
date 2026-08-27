@@ -9,6 +9,12 @@ import launcherReducer, {setLauncherSettings} from './slices/launcherSlice';
 import safetyReducer, {setSafetySettings} from './slices/safetySlice';
 import appsReducer from './slices/appsSlice';
 import {loadAllPersistedData} from '../database/repository';
+import {
+  MOCK_PARENT,
+  MOCK_FAMILY_MEMBERS,
+  MOCK_REMINDERS,
+  MOCK_HOME_ACTIONS,
+} from '../utils/mockData';
 
 export const store = configureStore({
   reducer: {
@@ -40,19 +46,32 @@ export const restoreAppState = createAsyncThunk(
 
       if (persisted.parent) {
         dispatch(setParent(persisted.parent));
+      } else {
+        dispatch(setParent(MOCK_PARENT));
       }
+
       if (persisted.family && persisted.family.length > 0) {
         dispatch(setMembers(persisted.family));
+      } else {
+        dispatch(setMembers(MOCK_FAMILY_MEMBERS));
       }
+
       if (persisted.homeActions && persisted.homeActions.length > 0) {
         dispatch(setActions(persisted.homeActions));
+      } else {
+        dispatch(setActions(MOCK_HOME_ACTIONS));
       }
+
       if (persisted.appearance) {
         dispatch(setAppearanceSettings(persisted.appearance));
       }
+
       if (persisted.reminders && persisted.reminders.length > 0) {
         dispatch(setReminders(persisted.reminders));
+      } else {
+        dispatch(setReminders(MOCK_REMINDERS));
       }
+
       if (persisted.launcher) {
         dispatch(setLauncherSettings(persisted.launcher));
       }

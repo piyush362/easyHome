@@ -31,12 +31,10 @@ import {RotateCw, Search, X} from 'lucide-react-native';
 import {useTheme} from '../../theme';
 import {useAppDispatch, useAppSelector, fetchInstalledApps} from '../../store';
 import {AppsService} from '../../services';
-import {InstalledApp} from '../../types/models';
+import {InstalledApp, DrawerColumns, IconShape} from '../../types/models';
 
 const {width: SCREEN_WIDTH} = Dimensions.get('window');
-const NUM_COLUMNS = 5;
 const HORIZONTAL_PADDING = 12;
-const ITEM_WIDTH = (SCREEN_WIDTH - HORIZONTAL_PADDING * 2) / NUM_COLUMNS;
 
 export interface PixelAppDrawerProps {
   onClose?: () => void;
@@ -60,14 +58,51 @@ export const PixelAppDrawer = forwardRef<PixelAppDrawerRef, PixelAppDrawerProps>
 
     const installedApps = useAppSelector(state => state.apps.installedApps);
     const isLoading = useAppSelector(state => state.apps.isLoading);
+    const drawerColumns: DrawerColumns =
+      useAppSelector(state => state.settings.appearance.drawerColumns) || 5;
+    const drawerIconShape: IconShape =
+      useAppSelector(state => state.settings.appearance.drawerIconShape) ||
+      'circle';
 
     const [searchQuery, setSearchQuery] = useState('');
     const [refreshing, setRefreshing] = useState(false);
     const [isOpen, setIsOpen] = useState(false);
 
     // Stop below the status bar with safe insets
-    const topInset = insets.top > 0 ? insets.top + 10 : 36;
-    const snapPoints = useMemo(() => ['88%', '94%'], []);
+    const topInset = insets.top > 0 ? insets.top + 8 : 32;
+    const bottomPadding = insets.bottom > 0 ? insets.bottom + 90 : 110;
+    const snapPoints = useMemo(() => ['94%'], []);
+
+    // Dynamic measurements based on drawerColumns (3, 4, 5)
+    const itemWidth = (SCREEN_WIDTH - HORIZONTAL_PADDING * 2) / drawerColumns;
+
+    const {containerSize, iconSize, labelSize} = useMemo(() => {
+      switch (drawerColumns) {
+        case 3:
+          return {containerSize: 64, iconSize: 56, labelSize: 13};
+        case 4:
+          return {containerSize: 56, iconSize: 48, labelSize: 12};
+        case 5:
+        default:
+          return {containerSize: 48, iconSize: 42, labelSize: 11};
+      }
+    }, [drawerColumns]);
+
+    // Border radius based on drawerIconShape
+    const {containerRadius, iconRadius} = useMemo(() => {
+      switch (drawerIconShape) {
+        case 'rounded':
+          return {containerRadius: 14, iconRadius: 12};
+        case 'square':
+          return {containerRadius: 4, iconRadius: 4};
+        case 'circle':
+        default:
+          return {
+            containerRadius: containerSize / 2,
+            iconRadius: iconSize / 2,
+          };
+      }
+    }, [drawerIconShape, containerSize, iconSize]);
 
     useImperativeHandle(
       ref,
@@ -188,7 +223,7 @@ export const PixelAppDrawer = forwardRef<PixelAppDrawerRef, PixelAppDrawerProps>
     const renderAppItem = ({item}: {item: InstalledApp}) => {
       return (
         <TouchableOpacity
-          style={styles.appGridItem}
+          style={[styles.appGridItem, {width: itemWidth}]}
           onPress={() => handleLaunchApp(item)}
           activeOpacity={0.7}
           accessibilityRole="button"
@@ -197,6 +232,9 @@ export const PixelAppDrawer = forwardRef<PixelAppDrawerRef, PixelAppDrawerProps>
             style={[
               styles.iconContainer,
               {
+                width: containerSize,
+                height: containerSize,
+                borderRadius: containerRadius,
                 backgroundColor: isDark ? '#1E293B' : '#FFFFFF',
                 borderColor: isDark
                   ? 'rgba(255, 255, 255, 0.08)'
@@ -206,14 +244,21 @@ export const PixelAppDrawer = forwardRef<PixelAppDrawerRef, PixelAppDrawerProps>
             {item.icon ? (
               <Image
                 source={{uri: item.icon}}
-                style={styles.appIcon}
+                style={{
+                  width: iconSize,
+                  height: iconSize,
+                  borderRadius: iconRadius,
+                }}
                 resizeMode="contain"
               />
             ) : (
               <Text
                 style={[
                   styles.fallbackIconText,
-                  {color: colors.primary},
+                  {
+                    color: colors.primary,
+                    fontSize: containerSize * 0.45,
+                  },
                 ]}>
                 {item.appName.charAt(0).toUpperCase()}
               </Text>
@@ -223,7 +268,10 @@ export const PixelAppDrawer = forwardRef<PixelAppDrawerRef, PixelAppDrawerProps>
           <Text
             style={[
               styles.appNameText,
-              {color: isDark ? '#F8FAFC' : '#0F172A'},
+              {
+                color: isDark ? '#F8FAFC' : '#0F172A',
+                fontSize: labelSize,
+              },
             ]}
             numberOfLines={1}
             ellipsizeMode="tail">
@@ -249,6 +297,7 @@ export const PixelAppDrawer = forwardRef<PixelAppDrawerRef, PixelAppDrawerProps>
         enableDynamicSizing={false}
         enableContentPanningGesture={true}
         enableHandlePanningGesture={true}
+        enableOverDrag={false}
         onChange={handleSheetChange}
         backdropComponent={renderBackdrop}
         handleIndicatorStyle={[
@@ -329,7 +378,7 @@ export const PixelAppDrawer = forwardRef<PixelAppDrawerRef, PixelAppDrawerProps>
             </View>
           </View>
 
-          {/* Content list with working scroll & pull-to-refresh disabled */}
+          {/* Content list with working scroll & pull-down-to-close at top */}
           {isLoading && installedApps.length === 0 ? (
             <View style={styles.loadingContainer}>
               <ActivityIndicator size="large" color={colors.primary} />
@@ -361,14 +410,20 @@ export const PixelAppDrawer = forwardRef<PixelAppDrawerRef, PixelAppDrawerProps>
             </View>
           ) : (
             <BottomSheetFlatList
+              key={`drawer-grid-${drawerColumns}`}
               style={styles.flatList}
               data={filteredApps}
               keyExtractor={(item: InstalledApp) => item.packageName}
               renderItem={renderAppItem}
-              numColumns={NUM_COLUMNS}
-              contentContainerStyle={styles.listContent}
+              numColumns={drawerColumns}
+              contentContainerStyle={[
+                styles.listContent,
+                {paddingBottom: bottomPadding},
+              ]}
               showsVerticalScrollIndicator={true}
               nestedScrollEnabled={true}
+              bounces={false}
+              overScrollMode="never"
               keyboardShouldPersistTaps="handled"
               initialNumToRender={20}
               maxToRenderPerBatch={25}
@@ -439,19 +494,14 @@ const styles = StyleSheet.create({
   },
   listContent: {
     paddingHorizontal: HORIZONTAL_PADDING,
-    paddingBottom: 60,
     paddingTop: 8,
   },
   appGridItem: {
-    width: ITEM_WIDTH,
     alignItems: 'center',
     marginVertical: 10,
     paddingHorizontal: 2,
   },
   iconContainer: {
-    width: 50,
-    height: 50,
-    borderRadius: 25,
     justifyContent: 'center',
     alignItems: 'center',
     borderWidth: 1,
@@ -463,17 +513,10 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.1,
     shadowRadius: 2,
   },
-  appIcon: {
-    width: 44,
-    height: 44,
-    borderRadius: 22,
-  },
   fallbackIconText: {
-    fontSize: 20,
     fontWeight: '700',
   },
   appNameText: {
-    fontSize: 11,
     fontWeight: '500',
     textAlign: 'center',
     width: '100%',

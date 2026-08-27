@@ -1,84 +1,86 @@
 import React from 'react';
-import {View, Text, TouchableOpacity, StyleSheet, StatusBar} from 'react-native';
+import {View, StyleSheet} from 'react-native';
+import {ShieldAlert, Lock, ArrowRight, ArrowLeft} from 'lucide-react-native';
 import type {FamilySetupScreenProps} from '../../../navigation/types';
+import {useTheme} from '../../../theme';
+import {
+  ScreenWrapper,
+  HeaderNavigation,
+  EHText,
+  EHCard,
+  EHButton,
+} from '../../../components';
 
 export default function SafetyStepScreen({
   navigation,
 }: FamilySetupScreenProps<'Safety'>) {
+  const {colors, spacing} = useTheme();
+
   return (
-    <View style={styles.container}>
-      <StatusBar barStyle="dark-content" />
-      <View style={styles.content}>
-        <Text style={styles.emoji}>🛡️</Text>
-        <Text style={styles.title}>Safety & PIN</Text>
-        <Text style={styles.subtitle}>Step 7 of 8: Emergency & PIN Protection</Text>
-        <View style={styles.badge}>
-          <Text style={styles.badgeText}>Security Setup Coming in Phase 10</Text>
+    <ScreenWrapper
+      headerComponent={
+        <HeaderNavigation
+          label="Safety & Security"
+          subtitle="Step 7 of 8: Protection & SOS"
+          onBack={() => navigation.goBack()}
+        />
+      }>
+      <View style={[styles.container, {padding: spacing.md}]}>
+        <EHCard style={styles.card} elevation="low">
+          <View style={styles.cardHeader}>
+            <ShieldAlert size={28} color={colors.primary} />
+            <EHText variant="heading2" weight="700">
+              Emergency SOS & Settings PIN
+            </EHText>
+          </View>
+          <EHText variant="body" color={colors.textSecondary}>
+            Configure 1-tap SOS calls, emergency location broadcast, and prevent
+            accidental settings changes with a 4-digit family PIN.
+          </EHText>
+        </EHCard>
+
+        {/* Action buttons */}
+        <View style={styles.btnRow}>
+          <EHButton
+            label="Back"
+            icon={<ArrowLeft size={18} color={colors.textPrimary} />}
+            variant="outline"
+            onPress={() => navigation.goBack()}
+            style={styles.halfBtn}
+          />
+          <EHButton
+            label="Next: Review"
+            icon={<ArrowRight size={18} color="#FFFFFF" />}
+            variant="primary"
+            onPress={() => navigation.navigate('Review')}
+            style={styles.halfBtn}
+          />
         </View>
       </View>
-
-      <View style={styles.buttonRow}>
-        <TouchableOpacity
-          style={styles.secondaryButton}
-          onPress={() => navigation.goBack()}
-          activeOpacity={0.8}>
-          <Text style={styles.secondaryButtonText}>← Back</Text>
-        </TouchableOpacity>
-
-        <TouchableOpacity
-          style={styles.primaryButton}
-          onPress={() => navigation.navigate('Review')}
-          activeOpacity={0.8}>
-          <Text style={styles.primaryButtonText}>Next: Review →</Text>
-        </TouchableOpacity>
-      </View>
-    </View>
+    </ScreenWrapper>
   );
 }
 
 const styles = StyleSheet.create({
   container: {
-    flex: 1,
-    backgroundColor: '#FAFAFA',
-    justifyContent: 'space-between',
-    padding: 24,
+    gap: 16,
   },
-  content: {
-    flex: 1,
-    justifyContent: 'center',
+  card: {
+    padding: 20,
+    gap: 12,
+  },
+  cardHeader: {
+    flexDirection: 'row',
     alignItems: 'center',
+    gap: 10,
   },
-  emoji: {fontSize: 56, marginBottom: 12},
-  title: {fontSize: 28, fontWeight: '700', color: '#1A1A2E', marginBottom: 8},
-  subtitle: {fontSize: 16, color: '#6B7280', marginBottom: 16},
-  badge: {
-    backgroundColor: '#EBF5FF',
-    paddingVertical: 8,
-    paddingHorizontal: 16,
-    borderRadius: 12,
-  },
-  badgeText: {color: '#4A90D9', fontWeight: '600', fontSize: 14},
-  buttonRow: {
+  btnRow: {
     flexDirection: 'row',
     gap: 12,
-    paddingTop: 16,
+    marginTop: 8,
   },
-  primaryButton: {
+  halfBtn: {
     flex: 1,
-    backgroundColor: '#4A90D9',
-    paddingVertical: 18,
-    borderRadius: 16,
-    alignItems: 'center',
+    minHeight: 56,
   },
-  primaryButtonText: {color: '#FFFFFF', fontSize: 16, fontWeight: '600'},
-  secondaryButton: {
-    flex: 1,
-    backgroundColor: '#FFFFFF',
-    paddingVertical: 18,
-    borderRadius: 16,
-    alignItems: 'center',
-    borderWidth: 1.5,
-    borderColor: '#D1D5DB',
-  },
-  secondaryButtonText: {color: '#4B5563', fontSize: 16, fontWeight: '600'},
 });

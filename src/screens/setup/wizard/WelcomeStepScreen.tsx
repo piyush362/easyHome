@@ -1,119 +1,131 @@
 import React from 'react';
-import {View, Text, TouchableOpacity, StyleSheet, StatusBar} from 'react-native';
+import {View, StyleSheet} from 'react-native';
+import {Heart, Sparkles, ArrowRight, CheckCircle2} from 'lucide-react-native';
 import type {FamilySetupScreenProps} from '../../../navigation/types';
+import {useTheme} from '../../../theme';
+import {
+  ScreenWrapper,
+  HeaderNavigation,
+  EHText,
+  EHCard,
+  EHButton,
+} from '../../../components';
 
 export default function WelcomeStepScreen({
   navigation,
 }: FamilySetupScreenProps<'Welcome'>) {
+  const {colors, spacing} = useTheme();
+
+  const configItems = [
+    "Parent's name & personal profile",
+    'Family contacts for 1-tap calls & WhatsApp',
+    'Essential apps on the home screen',
+    'High-contrast themes and large text',
+    'Daily medicine & water reminders',
+    'Emergency SOS & PIN safety protection',
+  ];
+
   return (
-    <View style={styles.container}>
-      <StatusBar barStyle="dark-content" />
-      <View style={styles.content}>
-        <Text style={styles.emoji}>🧙‍♂️</Text>
-        <Text style={styles.title}>Family Setup</Text>
-        <Text style={styles.subtitle}>
-          Set up and customize your parent's phone in a few simple steps.
-        </Text>
+    <ScreenWrapper
+      headerComponent={
+        <HeaderNavigation
+          label="Family Setup"
+          subtitle="Step 1 of 8: Welcome"
+          disableBack={true}
+        />
+      }>
+      <View style={[styles.container, {padding: spacing.md}]}>
+        {/* Intro Card */}
+        <EHCard style={styles.introCard} elevation="low">
+          <View
+            style={[
+              styles.iconCircle,
+              {backgroundColor: colors.primaryLight},
+            ]}>
+            <Heart size={36} color={colors.primary} />
+          </View>
+          <EHText variant="heading1" weight="800" align="center">
+            Welcome to EasyHome
+          </EHText>
+          <EHText
+            variant="body"
+            color={colors.textSecondary}
+            align="center"
+            style={styles.introDesc}>
+            Set up and customize your parent's phone in a few simple steps so they
+            stay connected without confusion.
+          </EHText>
+        </EHCard>
 
-        <View style={styles.stepBadge}>
-          <Text style={styles.stepBadgeText}>Step 1 of 8: Welcome</Text>
-        </View>
+        {/* Checklist Card */}
+        <EHCard style={styles.checklistCard}>
+          <EHText variant="heading2" weight="700" style={styles.listTitle}>
+            What we will configure:
+          </EHText>
+          {configItems.map((item, index) => (
+            <View key={index} style={styles.checkItem}>
+              <CheckCircle2 size={18} color={colors.success} style={styles.checkIcon} />
+              <EHText variant="body" style={styles.itemText}>
+                {item}
+              </EHText>
+            </View>
+          ))}
+        </EHCard>
 
-        <View style={styles.infoBox}>
-          <Text style={styles.infoTitle}>What we will configure:</Text>
-          <Text style={styles.infoItem}>• Parent's name & photo</Text>
-          <Text style={styles.infoItem}>• Favorite family contacts</Text>
-          <Text style={styles.infoItem}>• Key apps on home screen</Text>
-          <Text style={styles.infoItem}>• Visual themes and large text</Text>
-          <Text style={styles.infoItem}>• Medicine & daily reminders</Text>
-          <Text style={styles.infoItem}>• Emergency SOS & PIN protection</Text>
-        </View>
-      </View>
-
-      <View style={styles.footer}>
-        <TouchableOpacity
-          style={styles.primaryButton}
+        {/* Action button */}
+        <EHButton
+          label="Get Started"
+          icon={<ArrowRight size={18} color="#FFFFFF" />}
+          variant="primary"
           onPress={() => navigation.navigate('ParentProfile')}
-          activeOpacity={0.8}>
-          <Text style={styles.primaryButtonText}>Get Started →</Text>
-        </TouchableOpacity>
+          style={styles.actionBtn}
+        />
       </View>
-    </View>
+    </ScreenWrapper>
   );
 }
 
 const styles = StyleSheet.create({
   container: {
-    flex: 1,
-    backgroundColor: '#FAFAFA',
-    justifyContent: 'space-between',
+    gap: 16,
+  },
+  introCard: {
+    alignItems: 'center',
     padding: 24,
   },
-  content: {
-    flex: 1,
+  iconCircle: {
+    width: 68,
+    height: 68,
+    borderRadius: 34,
     justifyContent: 'center',
     alignItems: 'center',
+    marginBottom: 16,
   },
-  emoji: {
-    fontSize: 56,
-    marginBottom: 12,
+  introDesc: {
+    marginTop: 8,
+    lineHeight: 22,
   },
-  title: {
-    fontSize: 32,
-    fontWeight: '700',
-    color: '#1A1A2E',
-    marginBottom: 8,
+  checklistCard: {
+    padding: 18,
+    gap: 12,
   },
-  subtitle: {
-    fontSize: 16,
-    color: '#6B7280',
-    textAlign: 'center',
-    marginBottom: 20,
-    lineHeight: 24,
+  listTitle: {
+    marginBottom: 4,
   },
-  stepBadge: {
-    backgroundColor: '#EBF5FF',
-    paddingVertical: 6,
-    paddingHorizontal: 14,
-    borderRadius: 12,
-    marginBottom: 24,
+  checkItem: {
+    flexDirection: 'row',
+    alignItems: 'flex-start',
   },
-  stepBadgeText: {
-    fontSize: 14,
-    fontWeight: '600',
-    color: '#4A90D9',
+  checkIcon: {
+    marginRight: 10,
+    marginTop: 2,
   },
-  infoBox: {
-    width: '100%',
-    backgroundColor: '#FFFFFF',
-    padding: 20,
-    borderRadius: 16,
-    borderWidth: 1,
-    borderColor: '#E5E7EB',
+  itemText: {
+    flex: 1,
+    lineHeight: 22,
   },
-  infoTitle: {
-    fontSize: 16,
-    fontWeight: '700',
-    color: '#374151',
-    marginBottom: 12,
-  },
-  infoItem: {
-    fontSize: 15,
-    color: '#4B5563',
-    marginBottom: 6,
-  },
-  footer: {
-    paddingTop: 16,
-  },
-  primaryButton: {
-    backgroundColor: '#4A90D9',
-    paddingVertical: 18,
-    borderRadius: 16,
-    alignItems: 'center',
-  },
-  primaryButtonText: {
-    color: '#FFFFFF',
-    fontSize: 18,
-    fontWeight: '600',
+  actionBtn: {
+    marginTop: 8,
+    minHeight: 56,
   },
 });

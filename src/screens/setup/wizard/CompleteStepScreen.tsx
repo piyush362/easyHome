@@ -1,11 +1,21 @@
 import React from 'react';
-import {View, Text, TouchableOpacity, StyleSheet, StatusBar} from 'react-native';
+import {View, StyleSheet} from 'react-native';
+import {CheckCircle2, Home, Sparkles} from 'lucide-react-native';
 import type {FamilySetupScreenProps} from '../../../navigation/types';
 import {useAppDispatch, setSetupCompleted} from '../../../store';
+import {useTheme} from '../../../theme';
+import {
+  ScreenWrapper,
+  HeaderNavigation,
+  EHText,
+  EHCard,
+  EHButton,
+} from '../../../components';
 
 export default function CompleteStepScreen({
   navigation,
 }: FamilySetupScreenProps<'Complete'>) {
+  const {colors, spacing} = useTheme();
   const dispatch = useAppDispatch();
 
   const handleFinish = () => {
@@ -14,65 +24,71 @@ export default function CompleteStepScreen({
   };
 
   return (
-    <View style={styles.container}>
-      <StatusBar barStyle="dark-content" />
-      <View style={styles.content}>
-        <Text style={styles.emoji}>🎉</Text>
-        <Text style={styles.title}>All Set!</Text>
-        <Text style={styles.subtitle}>
-          EasyHome is customized and ready for your parent to use.
-        </Text>
-        <View style={styles.badge}>
-          <Text style={styles.badgeText}>Setup Complete</Text>
-        </View>
-      </View>
+    <ScreenWrapper
+      headerComponent={
+        <HeaderNavigation
+          label="Setup Complete"
+          subtitle="Ready to use EasyHome"
+          disableBack={true}
+        />
+      }>
+      <View style={[styles.container, {padding: spacing.md}]}>
+        <EHCard style={styles.centerCard} elevation="low">
+          <View
+            style={[
+              styles.iconCircle,
+              {backgroundColor: colors.successLight},
+            ]}>
+            <CheckCircle2 size={42} color={colors.success} />
+          </View>
+          <EHText variant="heading1" weight="800" align="center">
+            All Set!
+          </EHText>
+          <EHText
+            variant="body"
+            color={colors.textSecondary}
+            align="center"
+            style={styles.desc}>
+            EasyHome is personalized, protected, and ready for your parent to use
+            every day.
+          </EHText>
+        </EHCard>
 
-      <View style={styles.footer}>
-        <TouchableOpacity
-          style={styles.primaryButton}
+        {/* Action button */}
+        <EHButton
+          label="Go to Home Screen"
+          icon={<Home size={18} color="#FFFFFF" />}
+          variant="primary"
           onPress={handleFinish}
-          activeOpacity={0.8}>
-          <Text style={styles.primaryButtonText}>Go to Home 🏠</Text>
-        </TouchableOpacity>
+          style={styles.actionBtn}
+        />
       </View>
-    </View>
+    </ScreenWrapper>
   );
 }
 
 const styles = StyleSheet.create({
   container: {
-    flex: 1,
-    backgroundColor: '#FAFAFA',
-    justifyContent: 'space-between',
-    padding: 24,
+    gap: 16,
   },
-  content: {
-    flex: 1,
+  centerCard: {
+    alignItems: 'center',
+    padding: 28,
+  },
+  iconCircle: {
+    width: 76,
+    height: 76,
+    borderRadius: 38,
+    alignItems: 'center',
     justifyContent: 'center',
-    alignItems: 'center',
+    marginBottom: 16,
   },
-  emoji: {fontSize: 64, marginBottom: 16},
-  title: {fontSize: 32, fontWeight: '700', color: '#1A1A2E', marginBottom: 8},
-  subtitle: {
-    fontSize: 16,
-    color: '#6B7280',
-    textAlign: 'center',
-    marginBottom: 24,
-    lineHeight: 24,
+  desc: {
+    marginTop: 8,
+    lineHeight: 22,
   },
-  badge: {
-    backgroundColor: '#E8F5E9',
-    paddingVertical: 8,
-    paddingHorizontal: 16,
-    borderRadius: 12,
+  actionBtn: {
+    marginTop: 8,
+    minHeight: 56,
   },
-  badgeText: {color: '#2E7D32', fontWeight: '600', fontSize: 14},
-  footer: {paddingTop: 16},
-  primaryButton: {
-    backgroundColor: '#4A90D9',
-    paddingVertical: 18,
-    borderRadius: 16,
-    alignItems: 'center',
-  },
-  primaryButtonText: {color: '#FFFFFF', fontSize: 18, fontWeight: '600'},
 });

@@ -3,6 +3,8 @@ import {
   AppearanceSettings,
   ColorTheme,
   SizeScale,
+  DrawerColumns,
+  IconShape,
 } from '../../types/models';
 import {saveAppearance} from '../../database/repository';
 
@@ -12,6 +14,8 @@ export const DEFAULT_APPEARANCE: AppearanceSettings = {
   iconSize: 'large',
   buttonSize: 'large',
   appearance: 'light',
+  drawerColumns: 5,
+  drawerIconShape: 'circle',
 };
 
 export interface SettingsState {
@@ -53,6 +57,14 @@ export const settingsSlice = createSlice({
       state.appearance.appearance = action.payload;
       saveAppearance(state.appearance);
     },
+    setDrawerColumns: (state, action: PayloadAction<DrawerColumns>) => {
+      state.appearance.drawerColumns = action.payload;
+      saveAppearance(state.appearance);
+    },
+    setDrawerIconShape: (state, action: PayloadAction<IconShape>) => {
+      state.appearance.drawerIconShape = action.payload;
+      saveAppearance(state.appearance);
+    },
     resetAppearance: state => {
       state.appearance = DEFAULT_APPEARANCE;
       saveAppearance(state.appearance);
@@ -67,6 +79,8 @@ export const {
   setIconSize,
   setButtonSize,
   setAppearanceMode,
+  setDrawerColumns,
+  setDrawerIconShape,
   resetAppearance,
 } = settingsSlice.actions;
 

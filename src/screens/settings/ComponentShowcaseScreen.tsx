@@ -1,7 +1,20 @@
 import React, {useState} from 'react';
-import {ScrollView, View, StyleSheet, StatusBar} from 'react-native';
+import {View, StyleSheet} from 'react-native';
+import {
+  Phone,
+  MessageCircle,
+  Camera,
+  User,
+  Flashlight,
+  AlertTriangle,
+  Sun,
+  Moon,
+  Sparkles,
+} from 'lucide-react-native';
 import {useTheme} from '../../theme';
 import {
+  ScreenWrapper,
+  HeaderNavigation,
   EHText,
   EHButton,
   EHIconButton,
@@ -15,14 +28,13 @@ import {
 } from '../../components';
 import {
   useAppDispatch,
-  useAppSelector,
   setTheme,
   setTextSize,
   setButtonSize,
   setIconSize,
   setAppearanceMode,
 } from '../../store';
-import {ColorTheme, SizeScale} from '../../types/models';
+import {ColorTheme} from '../../types/models';
 import type {RootStackScreenProps} from '../../navigation/types';
 
 export default function ComponentShowcaseScreen({
@@ -39,33 +51,15 @@ export default function ComponentShowcaseScreen({
   const themes: ColorTheme[] = ['ocean', 'green', 'rose', 'warm', 'blue', 'dark'];
 
   return (
-    <View style={[styles.container, {backgroundColor: colors.background}]}>
-      <StatusBar
-        barStyle={appearance === 'dark' ? 'light-content' : 'dark-content'}
-      />
-
-      <ScrollView
-        contentContainerStyle={[
-          styles.scroll,
-          {padding: spacing.md, paddingBottom: 60},
-        ]}
-        showsVerticalScrollIndicator={false}>
-        {/* Header */}
-        <View style={styles.header}>
-          <EHButton
-            label="← Back to Settings"
-            variant="ghost"
-            onPress={() => navigation.goBack()}
-            style={styles.backBtn}
-          />
-          <EHText variant="heading1" weight="800">
-            Design System Showcase
-          </EHText>
-          <EHText variant="caption" color={colors.textSecondary}>
-            Interactive verification of all 10 EasyHome accessible components
-          </EHText>
-        </View>
-
+    <ScreenWrapper
+      headerComponent={
+        <HeaderNavigation
+          label="Design System Showcase"
+          subtitle="All 10 accessible components & tokens"
+          onBack={() => navigation.goBack()}
+        />
+      }>
+      <View style={[styles.container, {padding: spacing.md}]}>
         {/* Live Theme & Sizing Controls */}
         <EHSection
           title="1. Live Theme & Appearance Controls"
@@ -91,13 +85,15 @@ export default function ComponentShowcaseScreen({
             </EHText>
             <View style={styles.buttonWrap}>
               <EHButton
-                label="☀️ Light Mode"
+                label="Light Mode"
+                icon={<Sun size={18} color={appearance === 'light' ? '#FFF' : colors.primary} />}
                 variant={appearance === 'light' ? 'primary' : 'outline'}
                 onPress={() => dispatch(setAppearanceMode('light'))}
                 style={styles.halfBtn}
               />
               <EHButton
-                label="🌙 Dark Mode"
+                label="Dark Mode"
+                icon={<Moon size={18} color={appearance === 'dark' ? '#FFF' : colors.primary} />}
                 variant={appearance === 'dark' ? 'primary' : 'outline'}
                 onPress={() => dispatch(setAppearanceMode('dark'))}
                 style={styles.halfBtn}
@@ -199,38 +195,38 @@ export default function ComponentShowcaseScreen({
           subtitle="Large touch targets designed for home screen quick actions">
           <View style={styles.grid2}>
             <EHIconButton
-              icon="📞"
+              icon={<Phone size={30} color={colors.primary} />}
               label="Call"
               subtitle="Quick Dial"
               onPress={() => {}}
             />
             <EHIconButton
-              icon="💬"
+              icon={<MessageCircle size={30} color={colors.primary} />}
               label="WhatsApp"
               subtitle="Messages"
               badge={3}
               onPress={() => {}}
             />
             <EHIconButton
-              icon="📸"
+              icon={<Camera size={30} color={colors.primary} />}
               label="Photo"
               subtitle="Take Picture"
               onPress={() => {}}
             />
             <EHIconButton
-              icon="🤳"
+              icon={<User size={30} color={colors.primary} />}
               label="Selfie"
               subtitle="Front Camera"
               onPress={() => {}}
             />
             <EHIconButton
-              icon="🔦"
+              icon={<Flashlight size={30} color={colors.warning} />}
               label="Torch"
               subtitle="Tap to turn on"
               onPress={() => {}}
             />
             <EHIconButton
-              icon="🆘"
+              icon={<AlertTriangle size={30} color={colors.error} />}
               label="Help"
               subtitle="Emergency SOS"
               backgroundColor={colors.errorLight}
@@ -302,35 +298,41 @@ export default function ComponentShowcaseScreen({
             />
           </EHCard>
         </EHSection>
-      </ScrollView>
+      </View>
 
-      {/* Modal Demo */}
+      {/* Modal Showcase */}
       <EHModal
         visible={modalVisible}
         onClose={() => setModalVisible(false)}
-        title="Sample Modal Dialog">
-        <EHText variant="body" style={styles.modalText}>
-          This is an accessible modal with high contrast, background overlay,
-          and close triggers.
+        title="Emergency Alert Confirmation">
+        <EHText variant="body">
+          This is an accessible EHModal dialog with high-contrast text and clean actions.
         </EHText>
-        <EHButton
-          label="Got It"
-          onPress={() => setModalVisible(false)}
-          style={styles.modalBtn}
-        />
+        <View style={styles.modalBtnRow}>
+          <EHButton
+            label="Confirm Action"
+            variant="danger"
+            onPress={() => setModalVisible(false)}
+            style={styles.modalBtn}
+          />
+          <EHButton
+            label="Dismiss"
+            variant="outline"
+            onPress={() => setModalVisible(false)}
+            style={styles.modalBtn}
+          />
+        </View>
       </EHModal>
 
-      {/* Bottom Sheet Demo */}
+      {/* BottomSheet Showcase */}
       <EHBottomSheet
         visible={sheetVisible}
         onClose={() => setSheetVisible(false)}
-        title="Contact Daughter">
-        <EHText variant="body" style={styles.modalText}>
-          Choose how you want to reach out:
-        </EHText>
+        title="Contact Actions">
         <View style={styles.stackSpacing}>
           <EHButton
-            label="📞 Normal Phone Call"
+            label="📞 Phone Call"
+            variant="primary"
             onPress={() => setSheetVisible(false)}
           />
           <EHButton
@@ -345,37 +347,27 @@ export default function ComponentShowcaseScreen({
           />
         </View>
       </EHBottomSheet>
-    </View>
+    </ScreenWrapper>
   );
 }
 
 const styles = StyleSheet.create({
   container: {
-    flex: 1,
-  },
-  scroll: {
-    paddingTop: 36,
-  },
-  header: {
-    marginBottom: 20,
-  },
-  backBtn: {
-    alignSelf: 'flex-start',
-    paddingHorizontal: 0,
-    marginBottom: 8,
+    gap: 20,
   },
   cardSpacing: {
-    gap: 12,
+    padding: 16,
   },
   stackSpacing: {
     gap: 12,
+    padding: 16,
   },
   labelMargin: {
-    marginBottom: 4,
+    marginBottom: 8,
   },
   labelMarginTop: {
-    marginTop: 12,
-    marginBottom: 4,
+    marginTop: 16,
+    marginBottom: 8,
   },
   buttonWrap: {
     flexDirection: 'row',
@@ -383,13 +375,11 @@ const styles = StyleSheet.create({
     gap: 8,
   },
   smallBtn: {
-    minHeight: 44,
-    paddingHorizontal: 16,
-    paddingVertical: 8,
+    flexGrow: 1,
+    minWidth: 90,
   },
   halfBtn: {
     flex: 1,
-    minHeight: 48,
   },
   grid2: {
     flexDirection: 'row',
@@ -401,10 +391,12 @@ const styles = StyleSheet.create({
     justifyContent: 'space-around',
     paddingVertical: 8,
   },
-  modalText: {
-    marginBottom: 16,
+  modalBtnRow: {
+    flexDirection: 'row',
+    gap: 10,
+    marginTop: 16,
   },
   modalBtn: {
-    marginTop: 8,
+    flex: 1,
   },
 });

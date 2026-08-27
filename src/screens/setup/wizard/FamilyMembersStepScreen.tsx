@@ -1,84 +1,102 @@
 import React from 'react';
-import {View, Text, TouchableOpacity, StyleSheet, StatusBar} from 'react-native';
+import {View, StyleSheet} from 'react-native';
+import {Users, ArrowRight, ArrowLeft, Plus} from 'lucide-react-native';
 import type {FamilySetupScreenProps} from '../../../navigation/types';
+import {useTheme} from '../../../theme';
+import {useAppSelector} from '../../../store';
+import {
+  ScreenWrapper,
+  HeaderNavigation,
+  EHText,
+  EHCard,
+  EHAvatar,
+  EHButton,
+} from '../../../components';
 
 export default function FamilyMembersStepScreen({
   navigation,
 }: FamilySetupScreenProps<'FamilyMembers'>) {
+  const {colors, spacing} = useTheme();
+  const familyMembers = useAppSelector(state => state.family.members);
+
   return (
-    <View style={styles.container}>
-      <StatusBar barStyle="dark-content" />
-      <View style={styles.content}>
-        <Text style={styles.emoji}>👨‍👩‍👧‍👦</Text>
-        <Text style={styles.title}>Family Members</Text>
-        <Text style={styles.subtitle}>Step 3 of 8: Add Loved Ones</Text>
-        <View style={styles.badge}>
-          <Text style={styles.badgeText}>Form Coming in Phase 10</Text>
+    <ScreenWrapper
+      headerComponent={
+        <HeaderNavigation
+          label="Family Members"
+          subtitle="Step 3 of 8: Loved Ones"
+          onBack={() => navigation.goBack()}
+        />
+      }>
+      <View style={[styles.container, {padding: spacing.md}]}>
+        <EHCard style={styles.listCard} elevation="low">
+          <EHText variant="heading2" weight="700" style={styles.cardTitle}>
+            Current Family Contacts ({familyMembers.length})
+          </EHText>
+
+          {familyMembers.map(m => (
+            <View key={m.id} style={styles.memberRow}>
+              <EHAvatar source={m.photo} name={m.name} size={48} />
+              <View style={styles.memberInfo}>
+                <EHText variant="body" weight="700">
+                  {m.name}
+                </EHText>
+                <EHText variant="caption" color={colors.textSecondary}>
+                  {m.relationship} • {m.phoneNumber}
+                </EHText>
+              </View>
+            </View>
+          ))}
+        </EHCard>
+
+        {/* Action buttons */}
+        <View style={styles.btnRow}>
+          <EHButton
+            label="Back"
+            icon={<ArrowLeft size={18} color={colors.textPrimary} />}
+            variant="outline"
+            onPress={() => navigation.goBack()}
+            style={styles.halfBtn}
+          />
+          <EHButton
+            label="Next: Apps"
+            icon={<ArrowRight size={18} color="#FFFFFF" />}
+            variant="primary"
+            onPress={() => navigation.navigate('ImportantApps')}
+            style={styles.halfBtn}
+          />
         </View>
       </View>
-
-      <View style={styles.buttonRow}>
-        <TouchableOpacity
-          style={styles.secondaryButton}
-          onPress={() => navigation.goBack()}
-          activeOpacity={0.8}>
-          <Text style={styles.secondaryButtonText}>← Back</Text>
-        </TouchableOpacity>
-
-        <TouchableOpacity
-          style={styles.primaryButton}
-          onPress={() => navigation.navigate('ImportantApps')}
-          activeOpacity={0.8}>
-          <Text style={styles.primaryButtonText}>Next: Apps →</Text>
-        </TouchableOpacity>
-      </View>
-    </View>
+    </ScreenWrapper>
   );
 }
 
 const styles = StyleSheet.create({
   container: {
-    flex: 1,
-    backgroundColor: '#FAFAFA',
-    justifyContent: 'space-between',
-    padding: 24,
+    gap: 16,
   },
-  content: {
-    flex: 1,
-    justifyContent: 'center',
+  listCard: {
+    padding: 18,
+    gap: 14,
+  },
+  cardTitle: {
+    marginBottom: 4,
+  },
+  memberRow: {
+    flexDirection: 'row',
     alignItems: 'center',
+    gap: 12,
   },
-  emoji: {fontSize: 56, marginBottom: 12},
-  title: {fontSize: 28, fontWeight: '700', color: '#1A1A2E', marginBottom: 8},
-  subtitle: {fontSize: 16, color: '#6B7280', marginBottom: 16},
-  badge: {
-    backgroundColor: '#EBF5FF',
-    paddingVertical: 8,
-    paddingHorizontal: 16,
-    borderRadius: 12,
+  memberInfo: {
+    flex: 1,
   },
-  badgeText: {color: '#4A90D9', fontWeight: '600', fontSize: 14},
-  buttonRow: {
+  btnRow: {
     flexDirection: 'row',
     gap: 12,
-    paddingTop: 16,
+    marginTop: 8,
   },
-  primaryButton: {
+  halfBtn: {
     flex: 1,
-    backgroundColor: '#4A90D9',
-    paddingVertical: 18,
-    borderRadius: 16,
-    alignItems: 'center',
+    minHeight: 56,
   },
-  primaryButtonText: {color: '#FFFFFF', fontSize: 16, fontWeight: '600'},
-  secondaryButton: {
-    flex: 1,
-    backgroundColor: '#FFFFFF',
-    paddingVertical: 18,
-    borderRadius: 16,
-    alignItems: 'center',
-    borderWidth: 1.5,
-    borderColor: '#D1D5DB',
-  },
-  secondaryButtonText: {color: '#4B5563', fontSize: 16, fontWeight: '600'},
 });

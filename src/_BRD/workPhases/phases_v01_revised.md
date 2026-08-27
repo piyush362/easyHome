@@ -618,6 +618,8 @@ No actual feature screens. No data integration. Showcase screen only.
 
 ## Phase 6 — Parent Home Screen
 
+> **Status**: ✅ COMPLETED
+
 ### Goal
 
 Build the complete visual Home screen layout. Uses **mock data** — no native functionality yet. This is the screen the parent sees every day.
@@ -665,13 +667,13 @@ No actual native calls (camera, torch, app launching). No real weather API. No r
 
 ### Completion Criteria
 
-- [ ] Home screen renders all sections with mock data.
-- [ ] Changing theme/text size/icon size updates the Home screen.
-- [ ] Family cards show photos, names, relationships.
-- [ ] Tapping a family card shows a communication bottom sheet.
-- [ ] All action buttons are tappable (log to console).
-- [ ] Layout is clean and calm.
-- [ ] TypeScript compiles. App builds and runs.
+- [x] Home screen renders all sections with mock data.
+- [x] Changing theme/text size/icon size updates the Home screen.
+- [x] Family cards show photos, names, relationships.
+- [x] Tapping a family card shows a communication bottom sheet.
+- [x] All action buttons are tappable (log to console).
+- [x] Layout is clean and calm.
+- [x] TypeScript compiles. App builds and runs.
 
 ---
 

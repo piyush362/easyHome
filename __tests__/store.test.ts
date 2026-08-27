@@ -1,7 +1,12 @@
 import {store} from '../src/store/store';
 import {setParent, updateParent} from '../src/store/slices/parentSlice';
 import {addMember, removeMember} from '../src/store/slices/familySlice';
-import {setTheme, setTextSize} from '../src/store/slices/settingsSlice';
+import {
+  setTheme,
+  setTextSize,
+  setDrawerColumns,
+  setDrawerIconShape,
+} from '../src/store/slices/settingsSlice';
 import {addReminder, toggleReminderEnabled} from '../src/store/slices/reminderSlice';
 import {setEmergencyContactId, setSettingsProtected} from '../src/store/slices/safetySlice';
 import {setIsDefault, setSetupStep} from '../src/store/slices/launcherSlice';
@@ -53,6 +58,12 @@ describe('Redux Store & Slices', () => {
 
     store.dispatch(setTextSize('extraLarge'));
     expect(store.getState().settings.appearance.textSize).toBe('extraLarge');
+
+    store.dispatch(setDrawerColumns(4));
+    expect(store.getState().settings.appearance.drawerColumns).toBe(4);
+
+    store.dispatch(setDrawerIconShape('rounded'));
+    expect(store.getState().settings.appearance.drawerIconShape).toBe('rounded');
   });
 
   test('Home Slice toggles actions', () => {

@@ -74,12 +74,17 @@ export type ColorTheme =
 
 export type SizeScale = 'large' | 'extraLarge';
 
+export type DrawerColumns = 3 | 4 | 5;
+export type IconShape = 'circle' | 'rounded' | 'square';
+
 export interface AppearanceSettings {
   theme: ColorTheme;
   textSize: SizeScale;
   iconSize: SizeScale;
   buttonSize: SizeScale;
   appearance: 'light' | 'dark';
+  drawerColumns?: DrawerColumns;
+  drawerIconShape?: IconShape;
 }
 
 export interface SafetySettings {
