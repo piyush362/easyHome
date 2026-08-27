@@ -14,8 +14,7 @@ import {SafeAreaProvider} from 'react-native-safe-area-context';
 import {NavigationContainer} from '@react-navigation/native';
 import {createNativeStackNavigator} from '@react-navigation/native-stack';
 
-import LauncherSetupScreen from './src/screens/LauncherSetupScreen';
-import MinimalHomeScreen from './src/screens/MinimalHomeScreen';
+import {LauncherSetupScreen, MinimalHomeScreen} from './src/screens';
 
 export type RootStackParamList = {
   LauncherSetup: undefined;
