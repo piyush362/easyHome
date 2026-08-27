@@ -6,3 +6,4 @@ export * from './settingsSlice';
 export * from './reminderSlice';
 export * from './launcherSlice';
 export * from './safetySlice';
+export * from './appsSlice';

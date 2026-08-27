@@ -1,2 +1,2 @@
-// TypeScript interfaces for Native Modules barrel
-export {};
+// Native module interfaces barrel
+export * from './AppDiscoveryNativeModule';

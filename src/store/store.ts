@@ -7,6 +7,7 @@ import settingsReducer, {setAppearanceSettings} from './slices/settingsSlice';
 import reminderReducer, {setReminders} from './slices/reminderSlice';
 import launcherReducer, {setLauncherSettings} from './slices/launcherSlice';
 import safetyReducer, {setSafetySettings} from './slices/safetySlice';
+import appsReducer from './slices/appsSlice';
 import {loadAllPersistedData} from '../database/repository';
 
 export const store = configureStore({
@@ -19,6 +20,7 @@ export const store = configureStore({
     reminders: reminderReducer,
     launcher: launcherReducer,
     safety: safetyReducer,
+    apps: appsReducer,
   },
   middleware: getDefaultMiddleware =>
     getDefaultMiddleware({

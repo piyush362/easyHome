@@ -533,6 +533,8 @@ No actual screen content beyond placeholders. No forms. No data entry.
 
 ## Phase 5 — EasyHome Design System
 
+> **Status**: ✅ COMPLETED
+
 ### Goal
 
 Create all reusable UI components and design tokens. After this phase, every screen built in later phases uses consistent styling from a central theme.
@@ -605,12 +607,12 @@ No actual feature screens. No data integration. Showcase screen only.
 
 ### Completion Criteria
 
-- [ ] All 10 components exist and render correctly.
-- [ ] Changing theme in Redux updates all component colors.
-- [ ] Changing text/icon/button size in Redux updates all component dimensions.
-- [ ] Showcase screen displays all components.
-- [ ] TypeScript compiles.
-- [ ] App builds and runs.
+- [x] All 10 components exist and render correctly.
+- [x] Changing theme in Redux updates all component colors.
+- [x] Changing text/icon/button size in Redux updates all component dimensions.
+- [x] Showcase screen displays all components.
+- [x] TypeScript compiles.
+- [x] App builds and runs.
 
 ---
 

@@ -33,6 +33,15 @@ export default function SettingsScreen({
         <View style={styles.badge}>
           <Text style={styles.badgeText}>Coming in Phase 11 & 14</Text>
         </View>
+
+        <TouchableOpacity
+          style={styles.showcaseButton}
+          onPress={() => navigation.navigate('ComponentShowcase')}
+          activeOpacity={0.8}>
+          <Text style={styles.showcaseButtonText}>
+            🎨 Open Design System Showcase →
+          </Text>
+        </TouchableOpacity>
       </View>
     </View>
   );
@@ -99,5 +108,19 @@ const styles = StyleSheet.create({
     color: '#4A90D9',
     fontWeight: '600',
     fontSize: 14,
+  },
+  showcaseButton: {
+    marginTop: 24,
+    backgroundColor: '#0284C7',
+    paddingVertical: 16,
+    paddingHorizontal: 24,
+    borderRadius: 14,
+    alignItems: 'center',
+    width: '100%',
+  },
+  showcaseButtonText: {
+    color: '#FFFFFF',
+    fontSize: 16,
+    fontWeight: '700',
   },
 });

@@ -1,2 +1,2 @@
-// Native module service abstractions barrel
-export {};
+// Services barrel
+export * from './AppsService';

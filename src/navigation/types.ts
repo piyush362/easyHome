@@ -19,6 +19,7 @@ export type RootStackParamList = {
   Family: undefined;
   Apps: undefined;
   Settings: undefined;
+  ComponentShowcase: undefined;
   FamilySetup: NavigatorScreenParams<FamilySetupStackParamList> | undefined;
 };
 
