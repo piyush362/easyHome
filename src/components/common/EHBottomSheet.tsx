@@ -2,12 +2,14 @@ import React from 'react';
 import {
   Modal,
   View,
-  TouchableOpacity,
   StyleSheet,
   ViewStyle,
   StyleProp,
   TouchableWithoutFeedback,
+  Platform,
 } from 'react-native';
+import {KeyboardAwareScrollView} from 'react-native-keyboard-aware-scroll-view';
+import {useSafeAreaInsets} from 'react-native-safe-area-context';
 import {useTheme} from '../../theme';
 import {EHText} from './EHText';
 
@@ -15,7 +17,12 @@ export interface EHBottomSheetProps {
   visible: boolean;
   onClose: () => void;
   title?: string;
+  subtitle?: string;
+  headerComponent?: React.ReactNode;
+  footerComponent?: React.ReactNode;
   children: React.ReactNode;
+  height?: number | string; // e.g. '85%', 'auto'
+  scrollable?: boolean;
   style?: StyleProp<ViewStyle>;
   testID?: string;
 }
@@ -24,11 +31,19 @@ export function EHBottomSheet({
   visible,
   onClose,
   title,
+  subtitle,
+  headerComponent,
+  footerComponent,
   children,
+  height = 'auto',
+  scrollable = true,
   style,
   testID,
 }: EHBottomSheetProps) {
   const {colors, borderRadius, elevation} = useTheme();
+  const insets = useSafeAreaInsets();
+
+  const isFixedHeight = height !== 'auto' && height !== undefined;
 
   return (
     <Modal
@@ -36,6 +51,7 @@ export function EHBottomSheet({
       visible={visible}
       transparent
       animationType="slide"
+      statusBarTranslucent
       onRequestClose={onClose}>
       <TouchableWithoutFeedback onPress={onClose}>
         <View style={styles.backdrop}>
@@ -48,29 +64,94 @@ export function EHBottomSheet({
                   borderTopLeftRadius: borderRadius.xl,
                   borderTopRightRadius: borderRadius.xl,
                   borderColor: colors.border,
+                  ...(isFixedHeight ? {height} : {maxHeight: '90%'}),
                   ...elevation.high,
                 },
                 style,
               ]}>
-              {/* Drag Handle */}
-              <View style={styles.handleContainer}>
-                <View
-                  style={[
-                    styles.handle,
-                    {backgroundColor: colors.border},
-                  ]}
-                />
+              {/* 1. Sticky Header */}
+              <View
+                style={[
+                  styles.stickyHeader,
+                  {
+                    borderBottomColor: colors.border,
+                    backgroundColor: colors.surface,
+                  },
+                ]}>
+                {/* Drag Handle */}
+                <View style={styles.handleContainer}>
+                  <View
+                    style={[
+                      styles.handle,
+                      {backgroundColor: colors.border},
+                    ]}
+                  />
+                </View>
+
+                {headerComponent ? (
+                  headerComponent
+                ) : title ? (
+                  <View style={styles.headerTitleBox}>
+                    <EHText variant="heading2" weight="700" align="center">
+                      {title}
+                    </EHText>
+                    {subtitle ? (
+                      <EHText
+                        variant="caption"
+                        color={colors.textSecondary}
+                        align="center"
+                        style={styles.subtitle}>
+                        {subtitle}
+                      </EHText>
+                    ) : null}
+                  </View>
+                ) : null}
               </View>
 
-              {title && (
-                <View style={styles.header}>
-                  <EHText variant="heading2" weight="700" align="center">
-                    {title}
-                  </EHText>
+              {/* 2. Middle Content */}
+              {scrollable ? (
+                <KeyboardAwareScrollView
+                  style={styles.scrollContent}
+                  contentContainerStyle={[
+                    styles.scrollContainer,
+                    !footerComponent && {
+                      paddingBottom: Math.max(insets.bottom + 16, 32),
+                    },
+                  ]}
+                  enableOnAndroid={true}
+                  enableAutomaticScroll={true}
+                  extraScrollHeight={Platform.OS === 'ios' ? 60 : 100}
+                  keyboardShouldPersistTaps="handled"
+                  showsVerticalScrollIndicator={true}>
+                  {children}
+                </KeyboardAwareScrollView>
+              ) : (
+                <View
+                  style={[
+                    styles.staticContent,
+                    isFixedHeight && {flex: 1},
+                    !footerComponent && {
+                      paddingBottom: Math.max(insets.bottom + 16, 32),
+                    },
+                  ]}>
+                  {children}
                 </View>
               )}
 
-              <View style={styles.content}>{children}</View>
+              {/* 3. Sticky Footer (With Bottom Safe Area Inset) */}
+              {footerComponent && (
+                <View
+                  style={[
+                    styles.stickyFooter,
+                    {
+                      borderTopColor: colors.border,
+                      backgroundColor: colors.surface,
+                      paddingBottom: Math.max(insets.bottom + 10, 18),
+                    },
+                  ]}>
+                  {footerComponent}
+                </View>
+              )}
             </View>
           </TouchableWithoutFeedback>
         </View>
@@ -87,25 +168,46 @@ const styles = StyleSheet.create({
   },
   sheet: {
     width: '100%',
-    paddingHorizontal: 24,
-    paddingBottom: 40,
     borderTopWidth: 1,
-    maxHeight: '85%',
+    overflow: 'hidden',
+  },
+  stickyHeader: {
+    paddingHorizontal: 20,
+    paddingBottom: 14,
+    borderBottomWidth: 1,
   },
   handleContainer: {
     width: '100%',
     alignItems: 'center',
-    paddingVertical: 12,
+    paddingVertical: 10,
   },
   handle: {
-    width: 48,
+    width: 44,
     height: 5,
     borderRadius: 3,
   },
-  header: {
-    marginBottom: 16,
+  headerTitleBox: {
+    marginTop: 2,
+    alignItems: 'center',
   },
-  content: {
-    width: '100%',
+  subtitle: {
+    marginTop: 2,
+  },
+  scrollContent: {
+    flex: 1,
+  },
+  scrollContainer: {
+    paddingHorizontal: 20,
+    paddingVertical: 16,
+    flexGrow: 1,
+  },
+  staticContent: {
+    paddingHorizontal: 20,
+    paddingVertical: 16,
+  },
+  stickyFooter: {
+    paddingHorizontal: 20,
+    paddingTop: 12,
+    borderTopWidth: 1,
   },
 });

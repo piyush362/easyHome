@@ -1,45 +1,8 @@
 import {FamilyMember, Parent, Reminder, HomeAction} from '../types/models';
 
-export const MOCK_PARENT: Parent = {
-  id: 'parent-1',
-  name: 'Grandma Mary',
-  photo: null,
-};
+export const MOCK_PARENT: Parent | null = null;
 
-export const MOCK_FAMILY_MEMBERS: FamilyMember[] = [
-  {
-    id: 'fam-1',
-    name: 'Alice',
-    relationship: 'Daughter',
-    phoneNumber: '+1 (555) 019-2831',
-    photo: null,
-    preferredCommunication: 'call',
-  },
-  {
-    id: 'fam-2',
-    name: 'Bob',
-    relationship: 'Son',
-    phoneNumber: '+1 (555) 014-9922',
-    photo: null,
-    preferredCommunication: 'whatsapp',
-  },
-  {
-    id: 'fam-3',
-    name: 'Carol',
-    relationship: 'Sister',
-    phoneNumber: '+1 (555) 017-3311',
-    photo: null,
-    preferredCommunication: 'call',
-  },
-  {
-    id: 'fam-4',
-    name: 'David',
-    relationship: 'Grandson',
-    phoneNumber: '+1 (555) 018-4455',
-    photo: null,
-    preferredCommunication: 'video',
-  },
-];
+export const MOCK_FAMILY_MEMBERS: FamilyMember[] = [];
 
 export const MOCK_REMINDERS: Reminder[] = [
   {

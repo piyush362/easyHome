@@ -4,7 +4,6 @@ import {
   Text,
   TextInput,
   TouchableOpacity,
-  ScrollView,
   StyleSheet,
   Alert,
   ActivityIndicator,
@@ -25,7 +24,10 @@ import {
   Search,
   Check,
   X,
+  Camera,
+  Image as ImageIcon,
 } from 'lucide-react-native';
+import {launchImageLibrary, launchCamera} from 'react-native-image-picker';
 import type {RootStackScreenProps} from '../../navigation/types';
 import {
   useAppSelector,
@@ -39,27 +41,23 @@ import {
   ScreenWrapper,
   HeaderNavigation,
   EHText,
+  EHButton,
   EHCard,
   EHAvatar,
-  EHButton,
   EHBottomSheet,
-  EHModal,
 } from '../../components';
-import {ContactsService} from '../../services';
-import {DeviceContact} from '../../native/ContactsNativeModule';
-import {FamilyMember} from '../../types/models';
+import {FamilyMember, RelationshipType} from '../../types/models';
+import {
+  ContactsService,
+  DeviceContact,
+  ImageCompressorService,
+} from '../../services';
 
-const RELATIONSHIPS = [
-  'Daughter',
+const STANDARD_RELATIONSHIPS: RelationshipType[] = [
   'Son',
-  'Wife',
-  'Husband',
-  'Granddaughter',
-  'Grandson',
-  'Mother',
-  'Father',
-  'Brother',
-  'Sister',
+  'Daughter',
+  'Spouse',
+  'Grandchild',
   'Doctor',
   'Caregiver',
   'Friend',
@@ -69,36 +67,53 @@ const RELATIONSHIPS = [
 export default function FamilyScreen({
   navigation,
 }: RootStackScreenProps<'Family'>) {
-  const {colors, spacing, isDark} = useTheme();
+  const {colors, spacing, isDark, borderRadius} = useTheme();
   const dispatch = useAppDispatch();
   const familyMembers = useAppSelector(state => state.family.members);
 
-  // Sheet / Modal states
+  // Active Bottom Sheet States
   const [selectedMember, setSelectedMember] = useState<FamilyMember | null>(null);
   const [addModalVisible, setAddModalVisible] = useState(false);
-  const [pickerModalVisible, setPickerModalVisible] = useState(false);
   const [editMember, setEditMember] = useState<FamilyMember | null>(null);
+  const [pickerModalVisible, setPickerModalVisible] = useState(false);
 
-  // Device contact picker states
+  // Form State for Add / Edit
+  const [formName, setFormName] = useState('');
+  const [formPhone, setFormPhone] = useState('');
+  const [formPhoto, setFormPhoto] = useState<string | null>(null);
+  const [formRelationship, setFormRelationship] =
+    useState<RelationshipType>('Son');
+  const [formCustomRelationship, setFormCustomRelationship] = useState('');
+  const [formPref, setFormPref] = useState<
+    'call' | 'whatsapp' | 'video' | 'message'
+  >('call');
+  const [compressingPhoto, setCompressingPhoto] = useState(false);
+
+  // Device Contacts State
   const [deviceContacts, setDeviceContacts] = useState<DeviceContact[]>([]);
   const [loadingContacts, setLoadingContacts] = useState(false);
   const [contactSearchQuery, setContactSearchQuery] = useState('');
 
-  // Form states
-  const [formName, setFormName] = useState('');
-  const [formPhone, setFormPhone] = useState('');
-  const [formRelationship, setFormRelationship] = useState('Daughter');
-  const [formPreference, setFormPreference] = useState<
-    'call' | 'whatsapp' | 'video' | 'message'
-  >('call');
+  const resetForm = useCallback(() => {
+    setFormName('');
+    setFormPhone('');
+    setFormPhoto(null);
+    setFormRelationship('Son');
+    setFormCustomRelationship('');
+    setFormPref('call');
+    setCompressingPhoto(false);
+  }, []);
 
-  // Real action handlers
+  // Quick Action Callbacks
   const handleCall = async (member: FamilyMember) => {
     setSelectedMember(null);
     try {
       await ContactsService.makeDirectCall(member.phoneNumber);
     } catch (error: any) {
-      Alert.alert('Cannot Call', `Failed to call ${member.name}: ${error?.message}`);
+      Alert.alert(
+        'Cannot Call',
+        `Failed to call ${member.name}: ${error?.message}`,
+      );
     }
   };
 
@@ -119,7 +134,10 @@ export default function FamilyScreen({
     try {
       await ContactsService.sendSMS(member.phoneNumber);
     } catch (error: any) {
-      Alert.alert('Cannot Send SMS', `Failed to send SMS to ${member.name}: ${error?.message}`);
+      Alert.alert(
+        'Cannot Send SMS',
+        `Failed to send SMS to ${member.name}: ${error?.message}`,
+      );
     }
   };
 
@@ -132,7 +150,7 @@ export default function FamilyScreen({
     }
   };
 
-  // Open Device Contact Picker
+  // Open Device Contact Picker Bottom Sheet
   const handleOpenContactPicker = async () => {
     setPickerModalVisible(true);
     setLoadingContacts(true);
@@ -150,7 +168,79 @@ export default function FamilyScreen({
   const handleSelectDeviceContact = (contact: DeviceContact) => {
     setFormName(contact.name);
     setFormPhone(contact.phoneNumber);
+    if (contact.photoUri) {
+      setFormPhoto(contact.photoUri);
+    }
     setPickerModalVisible(false);
+  };
+
+  // Pick photo from Gallery & Compress natively
+  const handlePickFromGallery = async () => {
+    try {
+      const res = await launchImageLibrary({
+        mediaType: 'photo',
+        quality: 1,
+        selectionLimit: 1,
+      });
+
+      if (res.assets && res.assets[0]?.uri) {
+        setCompressingPhoto(true);
+        const compressed = await ImageCompressorService.compress(
+          res.assets[0].uri,
+          512,
+          512,
+          80,
+        );
+        setFormPhoto(compressed.uri);
+      }
+    } catch (error: any) {
+      Alert.alert('Photo Error', 'Failed to pick photo: ' + error?.message);
+    } finally {
+      setCompressingPhoto(false);
+    }
+  };
+
+  // Capture photo from Camera & Compress natively
+  const handleTakePhoto = async () => {
+    try {
+      const res = await launchCamera({
+        mediaType: 'photo',
+        quality: 1,
+      });
+
+      if (res.assets && res.assets[0]?.uri) {
+        setCompressingPhoto(true);
+        const compressed = await ImageCompressorService.compress(
+          res.assets[0].uri,
+          512,
+          512,
+          80,
+        );
+        setFormPhoto(compressed.uri);
+      }
+    } catch (error: any) {
+      Alert.alert('Camera Error', 'Failed to capture photo: ' + error?.message);
+    } finally {
+      setCompressingPhoto(false);
+    }
+  };
+
+  // Photo Action Options
+  const handlePhotoOptions = () => {
+    Alert.alert('Contact Photo', 'Choose an option for the photo', [
+      {text: 'Take Photo', onPress: handleTakePhoto},
+      {text: 'Choose from Gallery', onPress: handlePickFromGallery},
+      ...(formPhoto
+        ? [
+            {
+              text: 'Remove Photo',
+              style: 'destructive' as const,
+              onPress: () => setFormPhoto(null),
+            },
+          ]
+        : []),
+      {text: 'Cancel', style: 'cancel'},
+    ]);
   };
 
   // Save new member
@@ -160,13 +250,18 @@ export default function FamilyScreen({
       return;
     }
 
+    const finalRelationship =
+      formRelationship === 'Other' && formCustomRelationship.trim()
+        ? formCustomRelationship.trim()
+        : formRelationship;
+
     const newMember: FamilyMember = {
-      id: 'fam-' + Date.now(),
+      id: `member-${Date.now()}-${Math.random().toString(36).substring(2, 7)}`,
       name: formName.trim(),
+      relationship: finalRelationship,
       phoneNumber: formPhone.trim(),
-      relationship: formRelationship,
-      photo: null,
-      preferredCommunication: formPreference,
+      photo: formPhoto,
+      preferredCommunication: formPref,
     };
 
     dispatch(addMember(newMember));
@@ -174,31 +269,54 @@ export default function FamilyScreen({
     resetForm();
   };
 
-  // Save edited member
+  // Open Edit Bottom Sheet
+  const openEditModal = (member: FamilyMember) => {
+    setEditMember(member);
+    setFormName(member.name);
+    setFormPhone(member.phoneNumber);
+    setFormPhoto(member.photo);
+    if (STANDARD_RELATIONSHIPS.includes(member.relationship as RelationshipType)) {
+      setFormRelationship(member.relationship as RelationshipType);
+      setFormCustomRelationship('');
+    } else {
+      setFormRelationship('Other');
+      setFormCustomRelationship(member.relationship);
+    }
+    setFormPref(member.preferredCommunication || 'call');
+  };
+
+  // Save edit member
   const handleSaveEditMember = () => {
-    if (!editMember || !formName.trim() || !formPhone.trim()) {
+    if (!editMember) return;
+    if (!formName.trim() || !formPhone.trim()) {
       Alert.alert('Required Fields', 'Please enter a name and phone number.');
       return;
     }
+
+    const finalRelationship =
+      formRelationship === 'Other' && formCustomRelationship.trim()
+        ? formCustomRelationship.trim()
+        : formRelationship;
 
     dispatch(
       updateMember({
         id: editMember.id,
         name: formName.trim(),
+        relationship: finalRelationship,
         phoneNumber: formPhone.trim(),
-        relationship: formRelationship,
-        preferredCommunication: formPreference,
+        photo: formPhoto,
+        preferredCommunication: formPref,
       }),
     );
     setEditMember(null);
     resetForm();
   };
 
-  // Delete member
+  // Delete member confirmation
   const handleDeleteMember = (member: FamilyMember) => {
     Alert.alert(
       'Remove Contact',
-      `Are you sure you want to remove ${member.name} from family contacts?`,
+      `Are you sure you want to remove ${member.name} from your loved ones?`,
       [
         {text: 'Cancel', style: 'cancel'},
         {
@@ -206,30 +324,14 @@ export default function FamilyScreen({
           style: 'destructive',
           onPress: () => {
             dispatch(removeMember(member.id));
-            if (editMember?.id === member.id) setEditMember(null);
-            if (selectedMember?.id === member.id) setSelectedMember(null);
+            setEditMember(null);
           },
         },
       ],
     );
   };
 
-  const openEditModal = (member: FamilyMember) => {
-    setEditMember(member);
-    setFormName(member.name);
-    setFormPhone(member.phoneNumber);
-    setFormRelationship(member.relationship);
-    setFormPreference(member.preferredCommunication);
-  };
-
-  const resetForm = () => {
-    setFormName('');
-    setFormPhone('');
-    setFormRelationship('Daughter');
-    setFormPreference('call');
-  };
-
-  // Filter device contacts for picker
+  // Filter contacts by search
   const filteredDeviceContacts = deviceContacts.filter(
     c =>
       c.name.toLowerCase().includes(contactSearchQuery.toLowerCase()) ||
@@ -241,7 +343,11 @@ export default function FamilyScreen({
       headerComponent={
         <HeaderNavigation
           label="Family Contacts"
-          subtitle={`${familyMembers.length} loved ones configured`}
+          subtitle={
+            familyMembers.length > 0
+              ? `${familyMembers.length} loved ones configured`
+              : 'Add important contacts'
+          }
           onBack={() => navigation.goBack()}
           rightComponent={
             <TouchableOpacity
@@ -261,92 +367,146 @@ export default function FamilyScreen({
         />
       }>
       <View style={[styles.container, {padding: spacing.md}]}>
-        {/* Family Cards List */}
-        {familyMembers.map((member, index) => (
-          <EHCard
-            key={member.id}
-            style={styles.memberCard}
-            onPress={() => setSelectedMember(member)}
-            elevation="low">
-            <View style={styles.cardRow}>
-              <View style={styles.avatarWrapper}>
-                <EHAvatar source={member.photo} name={member.name} size={58} />
-                {index === 0 && (
-                  <View
-                    style={[
-                      styles.starBadge,
-                      {backgroundColor: colors.primary},
-                    ]}>
-                    <Star size={12} color="#FFFFFF" fill="#FFFFFF" />
-                  </View>
-                )}
-              </View>
-
-              <View style={styles.memberInfo}>
-                <View style={styles.nameRow}>
-                  <EHText variant="heading2" weight="700">
-                    {member.name}
-                  </EHText>
-                </View>
-                <EHText variant="caption" color={colors.textSecondary}>
-                  {member.relationship} • {member.phoneNumber}
-                </EHText>
-              </View>
-
-              {/* Quick 1-tap direct action buttons */}
-              <View style={styles.actionRow}>
-                <EHButton
-                  label=""
-                  icon={<Phone size={18} color="#FFFFFF" />}
-                  variant="primary"
-                  onPress={() => handleCall(member)}
-                  style={styles.quickActionBtn}
-                />
-                <EHButton
-                  label=""
-                  icon={<MessageCircle size={18} color={colors.primary} />}
-                  variant="secondary"
-                  onPress={() => handleWhatsApp(member)}
-                  style={styles.quickActionBtn}
-                />
-                <TouchableOpacity
-                  style={[
-                    styles.editIconBtn,
-                    {
-                      backgroundColor: isDark
-                        ? 'rgba(255, 255, 255, 0.06)'
-                        : 'rgba(0, 0, 0, 0.04)',
-                    },
-                  ]}
-                  onPress={() => openEditModal(member)}>
-                  <Edit2 size={16} color={colors.textSecondary} />
-                </TouchableOpacity>
-              </View>
+        {familyMembers.length === 0 ? (
+          <View style={styles.emptyContainer}>
+            <View
+              style={[
+                styles.emptyIconCircle,
+                {backgroundColor: colors.primaryLight},
+              ]}>
+              <Heart size={44} color={colors.primary} />
             </View>
-          </EHCard>
-        ))}
+            <EHText variant="heading2" weight="700" style={styles.emptyTitle}>
+              No Loved Ones Added Yet
+            </EHText>
+            <EHText
+              variant="body"
+              color={colors.textSecondary}
+              style={styles.emptySubtitle}>
+              Add children, grandchildren, doctor or caregivers to enable 1-tap
+              direct calling and WhatsApp on your Home Screen.
+            </EHText>
 
-        {/* Add New Contact Button */}
-        <EHButton
-          label="Add Family Member"
-          icon={<UserPlus size={18} color="#FFFFFF" />}
-          variant="primary"
-          onPress={() => {
-            resetForm();
-            setAddModalVisible(true);
-          }}
-          style={styles.addBtn}
-        />
+            <EHButton
+              label="Add Family Member"
+              icon={<UserPlus size={18} color="#FFFFFF" />}
+              variant="primary"
+              onPress={() => {
+                resetForm();
+                setAddModalVisible(true);
+              }}
+              style={styles.emptyAddBtn}
+            />
+
+            <EHButton
+              label="Import from Phone Contacts"
+              icon={<BookOpen size={18} color={colors.primary} />}
+              variant="outline"
+              onPress={() => {
+                resetForm();
+                setAddModalVisible(true);
+                handleOpenContactPicker();
+              }}
+              style={styles.emptyImportBtn}
+            />
+          </View>
+        ) : (
+          <>
+            {/* Family Cards List */}
+            {familyMembers.map((member, index) => (
+              <EHCard
+                key={member.id}
+                style={styles.memberCard}
+                onPress={() => setSelectedMember(member)}
+                elevation="low">
+                <View style={styles.cardRow}>
+                  <View style={styles.avatarWrapper}>
+                    <EHAvatar source={member.photo} name={member.name} size={58} />
+                    {index === 0 && (
+                      <View
+                        style={[
+                          styles.starBadge,
+                          {backgroundColor: colors.primary},
+                        ]}>
+                        <Star size={12} color="#FFFFFF" fill="#FFFFFF" />
+                      </View>
+                    )}
+                  </View>
+
+                  <View style={styles.memberInfo}>
+                    <View style={styles.nameRow}>
+                      <EHText variant="heading2" weight="700">
+                        {member.name}
+                      </EHText>
+                    </View>
+                    <EHText variant="caption" color={colors.textSecondary}>
+                      {member.relationship} • {member.phoneNumber}
+                    </EHText>
+                  </View>
+
+                  {/* Quick 1-tap direct action buttons */}
+                  <View style={styles.actionRow}>
+                    <EHButton
+                      label=""
+                      icon={<Phone size={18} color="#FFFFFF" />}
+                      variant="primary"
+                      onPress={() => handleCall(member)}
+                      style={styles.quickActionBtn}
+                    />
+                    <EHButton
+                      label=""
+                      icon={<MessageCircle size={18} color={colors.primary} />}
+                      variant="secondary"
+                      onPress={() => handleWhatsApp(member)}
+                      style={styles.quickActionBtn}
+                    />
+                    <TouchableOpacity
+                      style={[
+                        styles.editIconBtn,
+                        {
+                          backgroundColor: isDark
+                            ? 'rgba(255, 255, 255, 0.06)'
+                            : 'rgba(0, 0, 0, 0.04)',
+                        },
+                      ]}
+                      onPress={() => openEditModal(member)}>
+                      <Edit2 size={16} color={colors.textSecondary} />
+                    </TouchableOpacity>
+                  </View>
+                </View>
+              </EHCard>
+            ))}
+
+            {/* Add New Contact Button */}
+            <EHButton
+              label="Add Family Member"
+              icon={<UserPlus size={18} color="#FFFFFF" />}
+              variant="primary"
+              onPress={() => {
+                resetForm();
+                setAddModalVisible(true);
+              }}
+              style={styles.addBtn}
+            />
+          </>
+        )}
       </View>
 
-      {/* Communication Bottom Sheet */}
+      {/* 1. Communication Bottom Sheet */}
       <EHBottomSheet
         visible={!!selectedMember}
         onClose={() => setSelectedMember(null)}
+        height="auto"
+        scrollable={false}
         title={
           selectedMember
             ? `Connect with ${selectedMember.name}`
             : 'Connect'
+        }
+        subtitle={
+          selectedMember
+            ? `${selectedMember.relationship} • ${selectedMember.phoneNumber}`
+            : undefined
         }>
         {selectedMember && (
           <View style={styles.sheetContent}>
@@ -388,185 +548,186 @@ export default function FamilyScreen({
         )}
       </EHBottomSheet>
 
-      {/* Add Member Modal */}
-      <EHModal
-        visible={addModalVisible}
+      {/* 2. Add Family Member Bottom Sheet */}
+      <EHBottomSheet
+        visible={addModalVisible && !pickerModalVisible}
         onClose={() => setAddModalVisible(false)}
-        title="Add Family Member">
-        <ScrollView style={styles.modalScroll} keyboardShouldPersistTaps="handled">
-          <EHButton
-            label="Import from Device Contacts"
-            icon={<BookOpen size={18} color={colors.primary} />}
-            variant="outline"
-            onPress={handleOpenContactPicker}
-            style={styles.importBtn}
-          />
-
-          <EHText variant="body" weight="700" style={styles.inputLabel}>
-            Contact Name
-          </EHText>
-          <TextInput
-            style={[
-              styles.input,
-              {
-                color: isDark ? '#FFF' : '#000',
-                borderColor: colors.border,
-                backgroundColor: isDark ? '#1E293B' : '#F8FAFC',
-              },
-            ]}
-            placeholder="e.g. Alice"
-            placeholderTextColor={colors.textMuted}
-            value={formName}
-            onChangeText={setFormName}
-          />
-
-          <EHText variant="body" weight="700" style={styles.inputLabel}>
-            Phone Number
-          </EHText>
-          <TextInput
-            style={[
-              styles.input,
-              {
-                color: isDark ? '#FFF' : '#000',
-                borderColor: colors.border,
-                backgroundColor: isDark ? '#1E293B' : '#F8FAFC',
-              },
-            ]}
-            placeholder="e.g. +1 555 123 4567"
-            placeholderTextColor={colors.textMuted}
-            keyboardType="phone-pad"
-            value={formPhone}
-            onChangeText={setFormPhone}
-          />
-
-          <EHText variant="body" weight="700" style={styles.inputLabel}>
-            Relationship
-          </EHText>
-          <View style={styles.relationshipWrap}>
-            {RELATIONSHIPS.map(rel => (
-              <TouchableOpacity
-                key={rel}
-                style={[
-                  styles.relBadge,
-                  {
-                    backgroundColor:
-                      formRelationship === rel
-                        ? colors.primary
-                        : isDark
-                        ? '#1E293B'
-                        : '#F1F5F9',
-                    borderColor:
-                      formRelationship === rel ? colors.primary : colors.border,
-                  },
-                ]}
-                onPress={() => setFormRelationship(rel)}>
-                <Text
-                  style={[
-                    styles.relBadgeText,
-                    {color: formRelationship === rel ? '#FFF' : colors.textPrimary},
-                  ]}>
-                  {rel}
-                </Text>
-              </TouchableOpacity>
-            ))}
-          </View>
-
-          <View style={styles.modalBtnRow}>
+        height="85%"
+        title="Add Loved One"
+        subtitle="Keep your family 1 tap away"
+        footerComponent={
+          <View style={styles.sheetBtnRow}>
             <EHButton
-              label="Save Member"
+              label="Save Loved One"
               icon={<Check size={18} color="#FFFFFF" />}
               variant="primary"
               onPress={handleSaveNewMember}
-              style={styles.modalActionBtn}
+              style={styles.sheetActionBtn}
             />
             <EHButton
               label="Cancel"
               variant="ghost"
               onPress={() => setAddModalVisible(false)}
-              style={styles.modalActionBtn}
+              style={styles.sheetActionBtn}
             />
           </View>
-        </ScrollView>
-      </EHModal>
+        }>
+        <EHButton
+          label="Import from Phone Contacts"
+          icon={<BookOpen size={18} color={colors.primary} />}
+          variant="outline"
+          onPress={handleOpenContactPicker}
+          style={styles.importBtn}
+        />
 
-      {/* Edit Member Modal */}
-      <EHModal
-        visible={!!editMember}
-        onClose={() => setEditMember(null)}
-        title="Edit Family Member">
-        <ScrollView style={styles.modalScroll} keyboardShouldPersistTaps="handled">
-          <EHText variant="body" weight="700" style={styles.inputLabel}>
-            Contact Name
-          </EHText>
-          <TextInput
+        {/* Photo Selector */}
+        <View style={styles.photoPickerRow}>
+          <TouchableOpacity
             style={[
-              styles.input,
-              {
-                color: isDark ? '#FFF' : '#000',
-                borderColor: colors.border,
-                backgroundColor: isDark ? '#1E293B' : '#F8FAFC',
-              },
+              styles.avatarContainer,
+              {borderColor: colors.border, backgroundColor: colors.surface},
             ]}
-            value={formName}
-            onChangeText={setFormName}
-          />
-
-          <EHText variant="body" weight="700" style={styles.inputLabel}>
-            Phone Number
-          </EHText>
-          <TextInput
-            style={[
-              styles.input,
-              {
-                color: isDark ? '#FFF' : '#000',
-                borderColor: colors.border,
-                backgroundColor: isDark ? '#1E293B' : '#F8FAFC',
-              },
-            ]}
-            keyboardType="phone-pad"
-            value={formPhone}
-            onChangeText={setFormPhone}
-          />
-
-          <EHText variant="body" weight="700" style={styles.inputLabel}>
-            Relationship
-          </EHText>
-          <View style={styles.relationshipWrap}>
-            {RELATIONSHIPS.map(rel => (
-              <TouchableOpacity
-                key={rel}
-                style={[
-                  styles.relBadge,
-                  {
-                    backgroundColor:
-                      formRelationship === rel
-                        ? colors.primary
-                        : isDark
-                        ? '#1E293B'
-                        : '#F1F5F9',
-                    borderColor:
-                      formRelationship === rel ? colors.primary : colors.border,
-                  },
-                ]}
-                onPress={() => setFormRelationship(rel)}>
-                <Text
-                  style={[
-                    styles.relBadgeText,
-                    {color: formRelationship === rel ? '#FFF' : colors.textPrimary},
-                  ]}>
-                  {rel}
-                </Text>
-              </TouchableOpacity>
-            ))}
+            onPress={handlePhotoOptions}
+            activeOpacity={0.8}>
+            {compressingPhoto ? (
+              <ActivityIndicator size="small" color={colors.primary} />
+            ) : (
+              <EHAvatar source={formPhoto} name={formName || 'User'} size={72} />
+            )}
+            <View
+              style={[
+                styles.photoEditBadge,
+                {backgroundColor: colors.primary},
+              ]}>
+              <Camera size={13} color="#FFFFFF" />
+            </View>
+          </TouchableOpacity>
+          <View style={styles.photoTextCol}>
+            <EHText variant="body" weight="700">
+              Contact Photo
+            </EHText>
+            <EHText variant="caption" color={colors.textSecondary}>
+              Auto-compressed to lightweight image
+            </EHText>
+            <TouchableOpacity onPress={handlePhotoOptions} style={styles.changePhotoBtn}>
+              <EHText variant="caption" color={colors.primary} weight="700">
+                {formPhoto ? 'Change Photo' : '+ Add Photo'}
+              </EHText>
+            </TouchableOpacity>
           </View>
+        </View>
 
-          <View style={styles.modalBtnRow}>
+        <EHText variant="body" weight="700" style={styles.inputLabel}>
+          Contact Name
+        </EHText>
+        <TextInput
+          style={[
+            styles.input,
+            {
+              color: isDark ? '#FFF' : '#000',
+              borderColor: colors.border,
+              backgroundColor: isDark ? '#1E293B' : '#F8FAFC',
+            },
+          ]}
+          placeholder="e.g. Alice"
+          placeholderTextColor={colors.textMuted}
+          value={formName}
+          onChangeText={setFormName}
+        />
+
+        <EHText variant="body" weight="700" style={styles.inputLabel}>
+          Phone Number
+        </EHText>
+        <TextInput
+          style={[
+            styles.input,
+            {
+              color: isDark ? '#FFF' : '#000',
+              borderColor: colors.border,
+              backgroundColor: isDark ? '#1E293B' : '#F8FAFC',
+            },
+          ]}
+          placeholder="e.g. +1 555 123 4567"
+          placeholderTextColor={colors.textMuted}
+          keyboardType="phone-pad"
+          value={formPhone}
+          onChangeText={setFormPhone}
+        />
+
+        <EHText variant="body" weight="700" style={styles.inputLabel}>
+          Relationship
+        </EHText>
+        <View style={styles.relationshipWrap}>
+          {STANDARD_RELATIONSHIPS.map(rel => (
+            <TouchableOpacity
+              key={rel}
+              style={[
+                styles.relBadge,
+                {
+                  backgroundColor:
+                    formRelationship === rel
+                      ? colors.primary
+                      : isDark
+                      ? '#1E293B'
+                      : '#F1F5F9',
+                  borderColor:
+                    formRelationship === rel ? colors.primary : colors.border,
+                },
+              ]}
+              onPress={() => setFormRelationship(rel)}>
+              <Text
+                style={[
+                  styles.relBadgeText,
+                  {
+                    color:
+                      formRelationship === rel ? '#FFF' : colors.textPrimary,
+                  },
+                ]}>
+                {rel}
+              </Text>
+            </TouchableOpacity>
+          ))}
+        </View>
+
+        {/* Custom Relationship Input when "Other" is selected */}
+        {formRelationship === 'Other' && (
+          <View style={styles.customRelBox}>
+            <EHText variant="body" weight="700" style={styles.inputLabel}>
+              Specify Relationship
+            </EHText>
+            <TextInput
+              style={[
+                styles.input,
+                {
+                  color: isDark ? '#FFF' : '#000',
+                  borderColor: colors.border,
+                  backgroundColor: isDark ? '#1E293B' : '#F8FAFC',
+                },
+              ]}
+              placeholder="e.g. Brother, Sister, Neighbor, Driver"
+              placeholderTextColor={colors.textMuted}
+              value={formCustomRelationship}
+              onChangeText={setFormCustomRelationship}
+            />
+          </View>
+        )}
+      </EHBottomSheet>
+
+      {/* 3. Edit Family Member Bottom Sheet */}
+      <EHBottomSheet
+        visible={!!editMember && !pickerModalVisible}
+        onClose={() => setEditMember(null)}
+        height="85%"
+        title="Edit Loved One"
+        subtitle={`Update details for ${editMember?.name || ''}`}
+        footerComponent={
+          <View style={styles.sheetBtnRow}>
             <EHButton
               label="Update"
               icon={<Check size={18} color="#FFFFFF" />}
               variant="primary"
               onPress={handleSaveEditMember}
-              style={styles.modalActionBtn}
+              style={styles.sheetActionBtn}
             />
             {editMember && (
               <EHButton
@@ -574,85 +735,231 @@ export default function FamilyScreen({
                 icon={<Trash2 size={18} color={colors.error} />}
                 variant="outline"
                 onPress={() => handleDeleteMember(editMember)}
-                style={styles.modalActionBtn}
+                style={styles.sheetActionBtn}
               />
             )}
           </View>
-        </ScrollView>
-      </EHModal>
-
-      {/* Device Contact Picker Modal */}
-      <EHModal
-        visible={pickerModalVisible}
-        onClose={() => setPickerModalVisible(false)}
-        title="Select from Contacts">
-        <View style={styles.pickerContainer}>
-          {/* Search bar */}
-          <View
+        }>
+        {/* Photo Selector */}
+        <View style={styles.photoPickerRow}>
+          <TouchableOpacity
             style={[
-              styles.searchBar,
-              {
-                backgroundColor: isDark ? '#1E293B' : '#F1F5F9',
-                borderColor: colors.border,
-              },
-            ]}>
-            <Search size={18} color={colors.textMuted} style={styles.searchIcon} />
+              styles.avatarContainer,
+              {borderColor: colors.border, backgroundColor: colors.surface},
+            ]}
+            onPress={handlePhotoOptions}
+            activeOpacity={0.8}>
+            {compressingPhoto ? (
+              <ActivityIndicator size="small" color={colors.primary} />
+            ) : (
+              <EHAvatar source={formPhoto} name={formName || 'User'} size={72} />
+            )}
+            <View
+              style={[
+                styles.photoEditBadge,
+                {backgroundColor: colors.primary},
+              ]}>
+              <Camera size={13} color="#FFFFFF" />
+            </View>
+          </TouchableOpacity>
+          <View style={styles.photoTextCol}>
+            <EHText variant="body" weight="700">
+              Contact Photo
+            </EHText>
+            <EHText variant="caption" color={colors.textSecondary}>
+              Auto-compressed to lightweight image
+            </EHText>
+            <TouchableOpacity onPress={handlePhotoOptions} style={styles.changePhotoBtn}>
+              <EHText variant="caption" color={colors.primary} weight="700">
+                {formPhoto ? 'Change Photo' : '+ Add Photo'}
+              </EHText>
+            </TouchableOpacity>
+          </View>
+        </View>
+
+        <EHText variant="body" weight="700" style={styles.inputLabel}>
+          Contact Name
+        </EHText>
+        <TextInput
+          style={[
+            styles.input,
+            {
+              color: isDark ? '#FFF' : '#000',
+              borderColor: colors.border,
+              backgroundColor: isDark ? '#1E293B' : '#F8FAFC',
+            },
+          ]}
+          value={formName}
+          onChangeText={setFormName}
+        />
+
+        <EHText variant="body" weight="700" style={styles.inputLabel}>
+          Phone Number
+        </EHText>
+        <TextInput
+          style={[
+            styles.input,
+            {
+              color: isDark ? '#FFF' : '#000',
+              borderColor: colors.border,
+              backgroundColor: isDark ? '#1E293B' : '#F8FAFC',
+            },
+          ]}
+          keyboardType="phone-pad"
+          value={formPhone}
+          onChangeText={setFormPhone}
+        />
+
+        <EHText variant="body" weight="700" style={styles.inputLabel}>
+          Relationship
+        </EHText>
+        <View style={styles.relationshipWrap}>
+          {STANDARD_RELATIONSHIPS.map(rel => (
+            <TouchableOpacity
+              key={rel}
+              style={[
+                styles.relBadge,
+                {
+                  backgroundColor:
+                    formRelationship === rel
+                      ? colors.primary
+                      : isDark
+                      ? '#1E293B'
+                      : '#F1F5F9',
+                  borderColor:
+                    formRelationship === rel ? colors.primary : colors.border,
+                },
+              ]}
+              onPress={() => setFormRelationship(rel)}>
+              <Text
+                style={[
+                  styles.relBadgeText,
+                  {
+                    color:
+                      formRelationship === rel ? '#FFF' : colors.textPrimary,
+                  },
+                ]}>
+                {rel}
+              </Text>
+            </TouchableOpacity>
+          ))}
+        </View>
+
+        {/* Custom Relationship Input when "Other" is selected */}
+        {formRelationship === 'Other' && (
+          <View style={styles.customRelBox}>
+            <EHText variant="body" weight="700" style={styles.inputLabel}>
+              Specify Relationship
+            </EHText>
             <TextInput
-              style={[styles.searchInput, {color: isDark ? '#FFF' : '#000'}]}
-              placeholder="Search contacts..."
+              style={[
+                styles.input,
+                {
+                  color: isDark ? '#FFF' : '#000',
+                  borderColor: colors.border,
+                  backgroundColor: isDark ? '#1E293B' : '#F8FAFC',
+                },
+              ]}
+              placeholder="e.g. Brother, Sister, Neighbor, Driver"
               placeholderTextColor={colors.textMuted}
-              value={contactSearchQuery}
-              onChangeText={setContactSearchQuery}
+              value={formCustomRelationship}
+              onChangeText={setFormCustomRelationship}
             />
           </View>
+        )}
+      </EHBottomSheet>
 
-          {loadingContacts ? (
-            <View style={styles.centerBox}>
-              <ActivityIndicator size="large" color={colors.primary} />
-              <EHText variant="caption" style={styles.loaderText}>
-                Loading phone contacts...
-              </EHText>
-            </View>
-          ) : filteredDeviceContacts.length === 0 ? (
-            <View style={styles.centerBox}>
-              <EHText variant="body" color={colors.textSecondary}>
-                No contacts found
-              </EHText>
-            </View>
-          ) : (
-            <FlatList
-              data={filteredDeviceContacts}
-              keyExtractor={item => item.id + item.phoneNumber}
-              style={styles.contactsList}
-              renderItem={({item}) => (
-                <TouchableOpacity
-                  style={[
-                    styles.contactItem,
-                    {borderBottomColor: colors.border},
-                  ]}
-                  onPress={() => handleSelectDeviceContact(item)}>
-                  <EHAvatar source={item.photoUri} name={item.name} size={42} />
-                  <View style={styles.contactItemText}>
-                    <EHText variant="body" weight="700">
-                      {item.name}
-                    </EHText>
-                    <EHText variant="caption" color={colors.textSecondary}>
-                      {item.phoneNumber}
-                    </EHText>
-                  </View>
-                </TouchableOpacity>
-              )}
-            />
-          )}
-
+      {/* 4. Import from Phone Contacts Bottom Sheet */}
+      <EHBottomSheet
+        visible={pickerModalVisible}
+        onClose={() => setPickerModalVisible(false)}
+        height="85%"
+        scrollable={false}
+        title="Select from Phone Contacts"
+        footerComponent={
           <EHButton
             label="Close"
             variant="ghost"
             onPress={() => setPickerModalVisible(false)}
-            style={styles.closePickerBtn}
           />
+        }>
+        {/* Search bar */}
+        <View
+          style={[
+            styles.searchBar,
+            {
+              backgroundColor: isDark ? '#1E293B' : '#F1F5F9',
+              borderColor: colors.border,
+            },
+          ]}>
+          <Search
+            size={18}
+            color={colors.textMuted}
+            style={styles.searchIcon}
+          />
+          <TextInput
+            style={[styles.searchInput, {color: isDark ? '#FFF' : '#000'}]}
+            placeholder="Search contacts..."
+            placeholderTextColor={colors.textMuted}
+            value={contactSearchQuery}
+            onChangeText={setContactSearchQuery}
+            autoCapitalize="none"
+            autoCorrect={false}
+          />
+          {contactSearchQuery.length > 0 && (
+            <TouchableOpacity
+              onPress={() => setContactSearchQuery('')}
+              hitSlop={{top: 10, bottom: 10, left: 10, right: 10}}>
+              <X size={16} color={colors.textMuted} />
+            </TouchableOpacity>
+          )}
         </View>
-      </EHModal>
+
+        {loadingContacts ? (
+          <View style={styles.centerBox}>
+            <ActivityIndicator size="large" color={colors.primary} />
+            <EHText variant="caption" style={styles.loaderText}>
+              Loading phone contacts...
+            </EHText>
+          </View>
+        ) : filteredDeviceContacts.length === 0 ? (
+          <View style={styles.centerBox}>
+            <EHText variant="body" color={colors.textSecondary}>
+              No contacts found
+            </EHText>
+          </View>
+        ) : (
+          <FlatList
+            data={filteredDeviceContacts}
+            keyExtractor={item => item.id + item.phoneNumber}
+            style={styles.contactsList}
+            showsVerticalScrollIndicator={true}
+            keyboardShouldPersistTaps="handled"
+            renderItem={({item}) => (
+              <TouchableOpacity
+                style={[
+                  styles.contactItem,
+                  {borderBottomColor: colors.border},
+                ]}
+                onPress={() => handleSelectDeviceContact(item)}>
+                <EHAvatar
+                  source={item.photoUri}
+                  name={item.name}
+                  size={42}
+                />
+                <View style={styles.contactItemText}>
+                  <EHText variant="body" weight="700">
+                    {item.name}
+                  </EHText>
+                  <EHText variant="caption" color={colors.textSecondary}>
+                    {item.phoneNumber}
+                  </EHText>
+                </View>
+              </TouchableOpacity>
+            )}
+          />
+        )}
+      </EHBottomSheet>
     </ScreenWrapper>
   );
 }
@@ -702,21 +1009,56 @@ const styles = StyleSheet.create({
     gap: 6,
   },
   quickActionBtn: {
-    minHeight: 40,
-    width: 40,
+    minHeight: 38,
+    minWidth: 38,
     paddingHorizontal: 0,
-    borderRadius: 20,
+    paddingVertical: 0,
+    borderRadius: 19,
+    justifyContent: 'center',
+    alignItems: 'center',
   },
   editIconBtn: {
     width: 36,
     height: 36,
     borderRadius: 18,
-    alignItems: 'center',
     justifyContent: 'center',
+    alignItems: 'center',
     marginLeft: 2,
   },
   addBtn: {
     marginTop: 12,
+    minHeight: 52,
+  },
+  emptyContainer: {
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingVertical: 40,
+    paddingHorizontal: 20,
+  },
+  emptyIconCircle: {
+    width: 88,
+    height: 88,
+    borderRadius: 44,
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginBottom: 20,
+  },
+  emptyTitle: {
+    textAlign: 'center',
+    marginBottom: 8,
+  },
+  emptySubtitle: {
+    textAlign: 'center',
+    lineHeight: 22,
+    marginBottom: 24,
+  },
+  emptyAddBtn: {
+    width: '100%',
+    minHeight: 52,
+    marginBottom: 12,
+  },
+  emptyImportBtn: {
+    width: '100%',
     minHeight: 52,
   },
   sheetContent: {
@@ -725,15 +1067,42 @@ const styles = StyleSheet.create({
   sheetBtn: {
     minHeight: 52,
   },
-  modalScroll: {
-    maxHeight: 420,
-  },
   importBtn: {
+    minHeight: 46,
     marginBottom: 14,
   },
+  photoPickerRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 16,
+    paddingVertical: 4,
+  },
+  avatarContainer: {
+    position: 'relative',
+    marginRight: 14,
+    borderRadius: 36,
+  },
+  photoEditBadge: {
+    position: 'absolute',
+    bottom: -2,
+    right: -2,
+    width: 22,
+    height: 22,
+    borderRadius: 11,
+    justifyContent: 'center',
+    alignItems: 'center',
+    borderWidth: 1.5,
+    borderColor: '#FFFFFF',
+  },
+  photoTextCol: {
+    flex: 1,
+  },
+  changePhotoBtn: {
+    marginTop: 4,
+  },
   inputLabel: {
-    marginTop: 10,
     marginBottom: 6,
+    marginTop: 4,
   },
   input: {
     height: 48,
@@ -741,44 +1110,43 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     paddingHorizontal: 14,
     fontSize: 16,
+    marginBottom: 12,
   },
   relationshipWrap: {
     flexDirection: 'row',
     flexWrap: 'wrap',
-    gap: 6,
-    marginTop: 4,
-    marginBottom: 16,
+    gap: 8,
+    marginBottom: 12,
   },
   relBadge: {
-    paddingHorizontal: 12,
-    paddingVertical: 6,
-    borderRadius: 16,
+    paddingHorizontal: 14,
+    paddingVertical: 8,
+    borderRadius: 20,
     borderWidth: 1,
   },
   relBadgeText: {
-    fontSize: 13,
+    fontSize: 14,
     fontWeight: '600',
   },
-  modalBtnRow: {
+  customRelBox: {
+    marginBottom: 8,
+  },
+  sheetBtnRow: {
     flexDirection: 'row',
     gap: 10,
-    marginTop: 8,
   },
-  modalActionBtn: {
+  sheetActionBtn: {
     flex: 1,
     minHeight: 48,
-  },
-  pickerContainer: {
-    height: 380,
   },
   searchBar: {
     flexDirection: 'row',
     alignItems: 'center',
-    height: 44,
-    borderRadius: 22,
+    height: 46,
+    borderRadius: 23,
     borderWidth: 1,
-    paddingHorizontal: 12,
-    marginBottom: 10,
+    paddingHorizontal: 14,
+    marginBottom: 12,
   },
   searchIcon: {
     marginRight: 8,
@@ -803,14 +1171,11 @@ const styles = StyleSheet.create({
   contactItem: {
     flexDirection: 'row',
     alignItems: 'center',
-    paddingVertical: 10,
+    paddingVertical: 12,
     borderBottomWidth: StyleSheet.hairlineWidth,
   },
   contactItemText: {
     marginLeft: 12,
     flex: 1,
-  },
-  closePickerBtn: {
-    marginTop: 10,
   },
 });

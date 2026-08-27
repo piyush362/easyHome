@@ -1,89 +1,39 @@
-import {
-  launchCamera,
-  CameraOptions,
-  ImagePickerResponse,
-} from 'react-native-image-picker';
-
-export interface CameraResult {
-  success: boolean;
-  uri?: string;
-  cancelled?: boolean;
-  error?: string;
-}
+import {CameraNativeModule} from '../native/CameraNativeModule';
 
 export class CameraService {
   /**
-   * Take a standard photo using the rear camera.
+   * Open the phone's native default camera app for photo capture.
    */
-  static async takePhoto(): Promise<CameraResult> {
-    const options: CameraOptions = {
-      mediaType: 'photo',
-      cameraType: 'back',
-      saveToPhotos: true,
-      quality: 0.9,
-      includeBase64: false,
-    };
-
-    return this.executeCamera(options);
-  }
-
-  /**
-   * Take a front-camera selfie.
-   */
-  static async takeSelfie(): Promise<CameraResult> {
-    const options: CameraOptions = {
-      mediaType: 'photo',
-      cameraType: 'front',
-      saveToPhotos: true,
-      quality: 0.9,
-      includeBase64: false,
-    };
-
-    return this.executeCamera(options);
-  }
-
-  /**
-   * Launch camera in video recording mode.
-   */
-  static async recordVideo(): Promise<CameraResult> {
-    const options: CameraOptions = {
-      mediaType: 'video',
-      cameraType: 'back',
-      saveToPhotos: true,
-      videoQuality: 'high',
-    };
-
-    return this.executeCamera(options);
-  }
-
-  private static async executeCamera(
-    options: CameraOptions,
-  ): Promise<CameraResult> {
+  static async takePhoto(): Promise<boolean> {
     try {
-      const response: ImagePickerResponse = await launchCamera(options);
+      return await CameraNativeModule.openCamera();
+    } catch (error) {
+      console.warn('[CameraService] Error opening camera:', error);
+      throw error;
+    }
+  }
 
-      if (response.didCancel) {
-        return {success: false, cancelled: true};
-      }
+  /**
+   * Open the phone's native default camera app in selfie (front camera) mode.
+   */
+  static async takeSelfie(): Promise<boolean> {
+    try {
+      return await CameraNativeModule.openSelfie();
+    } catch (error) {
+      console.warn('[CameraService] Error opening selfie camera:', error);
+      throw error;
+    }
+  }
 
-      if (response.errorCode || response.errorMessage) {
-        return {
-          success: false,
-          error: response.errorMessage || response.errorCode,
-        };
-      }
-
-      const asset = response.assets?.[0];
-      return {
-        success: true,
-        uri: asset?.uri,
-      };
-    } catch (error: any) {
-      console.warn('[CameraService] Error launching camera:', error);
-      return {
-        success: false,
-        error: error?.message || 'Failed to open camera',
-      };
+  /**
+   * Open the phone's native default camera app in video recording mode.
+   */
+  static async recordVideo(): Promise<boolean> {
+    try {
+      return await CameraNativeModule.openVideoCamera();
+    } catch (error) {
+      console.warn('[CameraService] Error opening video camera:', error);
+      throw error;
     }
   }
 }

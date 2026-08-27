@@ -11,20 +11,6 @@ import {
 } from '../src/services';
 import HomeScreen from '../src/screens/home/HomeScreen';
 
-// Mock react-native-image-picker
-jest.mock('react-native-image-picker', () => ({
-  launchCamera: jest.fn(async (options: any) => {
-    return {
-      assets: [{uri: 'file://mock-photo.jpg', width: 1000, height: 1000}],
-    };
-  }),
-  launchImageLibrary: jest.fn(async (options: any) => {
-    return {
-      assets: [{uri: 'file://mock-gallery-photo.jpg', width: 1000, height: 1000}],
-    };
-  }),
-}));
-
 // Mock react-native-mmkv
 jest.mock('react-native-mmkv', () => {
   const storageMap = new Map<string, string>();
@@ -39,27 +25,20 @@ jest.mock('react-native-mmkv', () => {
 });
 
 describe('Phase 9 — Camera, Photos & Torch System', () => {
-  test('CameraService takes photo, selfie, and records video', async () => {
+  test('CameraService launches native default camera, selfie, and video apps', async () => {
     const photoResult = await CameraService.takePhoto();
-    expect(photoResult.success).toBe(true);
-    expect(photoResult.uri).toBe('file://mock-photo.jpg');
+    expect(photoResult).toBe(true);
 
     const selfieResult = await CameraService.takeSelfie();
-    expect(selfieResult.success).toBe(true);
-    expect(selfieResult.uri).toBe('file://mock-photo.jpg');
+    expect(selfieResult).toBe(true);
 
     const videoResult = await CameraService.recordVideo();
-    expect(videoResult.success).toBe(true);
-    expect(videoResult.uri).toBe('file://mock-photo.jpg');
+    expect(videoResult).toBe(true);
   });
 
-  test('GalleryService opens gallery and picks photo', async () => {
-    const pickResult = await GalleryService.pickPhoto();
-    expect(pickResult.success).toBe(true);
-    expect(pickResult.uri).toBe('file://mock-gallery-photo.jpg');
-
+  test('GalleryService launches native default gallery app', async () => {
     const galleryResult = await GalleryService.openGallery();
-    expect(galleryResult.success).toBe(true);
+    expect(galleryResult).toBe(true);
   });
 
   test('TorchService controls flashlight hardware safely', async () => {

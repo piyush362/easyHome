@@ -4,10 +4,20 @@ export interface Parent {
   photo: string | null; // URI or base64 or null
 }
 
+export type RelationshipType =
+  | 'Son'
+  | 'Daughter'
+  | 'Spouse'
+  | 'Grandchild'
+  | 'Doctor'
+  | 'Caregiver'
+  | 'Friend'
+  | 'Other';
+
 export interface FamilyMember {
   id: string;
   name: string;
-  relationship: string; // "Daughter", "Son", "Wife", "Husband", "Brother", "Sister", "Grandchild", "Friend", etc.
+  relationship: RelationshipType | string;
   phoneNumber: string;
   photo: string | null;
   preferredCommunication: 'call' | 'whatsapp' | 'video' | 'message';

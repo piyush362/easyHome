@@ -5,12 +5,17 @@
  */
 
 import React, {useEffect} from 'react';
-import {StatusBar, StyleSheet} from 'react-native';
+import {StatusBar, StyleSheet, LogBox} from 'react-native';
 import {SafeAreaProvider} from 'react-native-safe-area-context';
 import {NavigationContainer} from '@react-navigation/native';
 import {Provider} from 'react-redux';
 import {GestureHandlerRootView} from 'react-native-gesture-handler';
 import {BottomSheetModalProvider} from '@gorhom/bottom-sheet';
+
+// Suppress third-party library web-compatibility warning from Reanimated
+LogBox.ignoreLogs([
+  '[Reanimated] dependencies should only be used in web implementation',
+]);
 
 import {store, restoreAppState, fetchInstalledApps, useAppDispatch} from './src/store';
 import {ThemeProvider, useTheme} from './src/theme';

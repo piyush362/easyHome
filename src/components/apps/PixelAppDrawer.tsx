@@ -48,7 +48,7 @@ export interface PixelAppDrawerRef {
   isOpen: () => boolean;
 }
 
-export const PixelAppDrawer = forwardRef<PixelAppDrawerRef, PixelAppDrawerProps>(
+const PixelAppDrawerComponent = forwardRef<PixelAppDrawerRef, PixelAppDrawerProps>(
   ({onClose, onOpen}, ref) => {
     const {colors, isDark} = useTheme();
     const insets = useSafeAreaInsets();
@@ -278,6 +278,81 @@ export const PixelAppDrawer = forwardRef<PixelAppDrawerRef, PixelAppDrawerProps>
 
     const iconColor = isDark ? '#94A3B8' : '#64748B';
 
+    // Sticky Pinned Search Header inside FlatList
+    const renderHeader = useCallback(
+      () => (
+        <View
+          style={[
+            styles.pinnedHeader,
+            {
+              backgroundColor: headerBg,
+              borderBottomColor: isDark
+                ? 'rgba(255, 255, 255, 0.08)'
+                : 'rgba(0, 0, 0, 0.05)',
+            },
+          ]}>
+          <View
+            style={[
+              styles.searchPill,
+              {
+                backgroundColor: isDark ? '#1E293B' : '#FFFFFF',
+                borderColor: isDark ? '#334155' : '#E2E8F0',
+              },
+            ]}>
+            <View style={styles.leftSearchIcon}>
+              <Search size={18} color={iconColor} strokeWidth={2.2} />
+            </View>
+
+            <TextInput
+              style={[
+                styles.searchInput,
+                {color: isDark ? '#F8FAFC' : '#0F172A'},
+              ]}
+              placeholder="Search all apps"
+              placeholderTextColor={isDark ? '#94A3B8' : '#64748B'}
+              value={searchQuery}
+              onChangeText={setSearchQuery}
+              autoCapitalize="none"
+              autoCorrect={false}
+              returnKeyType="search"
+            />
+
+            {searchQuery.length > 0 && (
+              <TouchableOpacity
+                onPress={() => setSearchQuery('')}
+                style={styles.actionButton}
+                activeOpacity={0.7}
+                accessibilityLabel="Clear search">
+                <X size={18} color={iconColor} strokeWidth={2.4} />
+              </TouchableOpacity>
+            )}
+
+            <TouchableOpacity
+              onPress={handleRefresh}
+              style={styles.actionButton}
+              activeOpacity={0.7}
+              disabled={refreshing}
+              accessibilityLabel="Refresh app list">
+              {refreshing ? (
+                <ActivityIndicator size="small" color={colors.primary} />
+              ) : (
+                <RotateCw size={19} color={iconColor} strokeWidth={2.2} />
+              )}
+            </TouchableOpacity>
+          </View>
+        </View>
+      ),
+      [
+        headerBg,
+        isDark,
+        iconColor,
+        searchQuery,
+        handleRefresh,
+        refreshing,
+        colors.primary,
+      ],
+    );
+
     return (
       <BottomSheet
         ref={sheetRef}
@@ -286,9 +361,6 @@ export const PixelAppDrawer = forwardRef<PixelAppDrawerRef, PixelAppDrawerProps>
         topInset={topInset}
         enablePanDownToClose={true}
         enableDynamicSizing={false}
-        enableContentPanningGesture={true}
-        enableHandlePanningGesture={true}
-        enableOverDrag={false}
         onChange={handleSheetChange}
         backdropComponent={renderBackdrop}
         handleIndicatorStyle={[
@@ -303,125 +375,57 @@ export const PixelAppDrawer = forwardRef<PixelAppDrawerRef, PixelAppDrawerProps>
               : 'rgba(248, 250, 252, 0.96)',
           },
         ]}>
-        <View style={styles.drawerContainer}>
-          {/* Sticky Pinned Header with Search Bar and Right-side Refresh Icon */}
-          <View
-            style={[
-              styles.pinnedHeader,
-              {
-                backgroundColor: headerBg,
-                borderBottomColor: isDark
-                  ? 'rgba(255, 255, 255, 0.08)'
-                  : 'rgba(0, 0, 0, 0.05)',
-              },
-            ]}>
-            <View
+        {isLoading && installedApps.length === 0 ? (
+          <View style={styles.loadingContainer}>
+            <ActivityIndicator size="large" color={colors.primary} />
+            <Text
               style={[
-                styles.searchPill,
-                {
-                  backgroundColor: isDark ? '#1E293B' : '#FFFFFF',
-                  borderColor: isDark ? '#334155' : '#E2E8F0',
-                },
+                styles.loadingText,
+                {color: isDark ? '#CBD5E1' : '#475569'},
               ]}>
-              {/* Left Search Icon */}
-              <View style={styles.leftSearchIcon}>
-                <Search size={18} color={iconColor} strokeWidth={2.2} />
-              </View>
-
-              <TextInput
-                style={[
-                  styles.searchInput,
-                  {color: isDark ? '#F8FAFC' : '#0F172A'},
-                ]}
-                placeholder="Search all apps"
-                placeholderTextColor={isDark ? '#94A3B8' : '#64748B'}
-                value={searchQuery}
-                onChangeText={setSearchQuery}
-                autoCapitalize="none"
-                autoCorrect={false}
-                returnKeyType="search"
-              />
-
-              {/* Right Clear Button if searching */}
-              {searchQuery.length > 0 && (
-                <TouchableOpacity
-                  onPress={() => setSearchQuery('')}
-                  style={styles.actionButton}
-                  activeOpacity={0.7}
-                  accessibilityLabel="Clear search">
-                  <X size={18} color={iconColor} strokeWidth={2.4} />
-                </TouchableOpacity>
-              )}
-
-              {/* Right-side Lucide Refresh Button */}
-              <TouchableOpacity
-                onPress={handleRefresh}
-                style={styles.actionButton}
-                activeOpacity={0.7}
-                disabled={refreshing}
-                accessibilityLabel="Refresh app list">
-                {refreshing ? (
-                  <ActivityIndicator size="small" color={colors.primary} />
-                ) : (
-                  <RotateCw size={19} color={iconColor} strokeWidth={2.2} />
-                )}
-              </TouchableOpacity>
-            </View>
+              Loading applications...
+            </Text>
           </View>
-
-          {/* Content list with working scroll & pull-down-to-close at top */}
-          {isLoading && installedApps.length === 0 ? (
-            <View style={styles.loadingContainer}>
-              <ActivityIndicator size="large" color={colors.primary} />
-              <Text
-                style={[
-                  styles.loadingText,
-                  {color: isDark ? '#CBD5E1' : '#475569'},
-                ]}>
-                Loading applications...
-              </Text>
-            </View>
-          ) : filteredApps.length === 0 ? (
-            <View style={styles.emptyContainer}>
-              <Text style={styles.emptyEmoji}>🔍</Text>
-              <Text
-                style={[
-                  styles.emptyTitle,
-                  {color: isDark ? '#F8FAFC' : '#0F172A'},
-                ]}>
-                No Apps Found
-              </Text>
-              <Text
-                style={[
-                  styles.emptySubtitle,
-                  {color: isDark ? '#94A3B8' : '#64748B'},
-                ]}>
-                No application matches "{searchQuery}"
-              </Text>
-            </View>
-          ) : (
-            <BottomSheetFlatList
-              key={`drawer-grid-${drawerColumns}`}
-              style={styles.flatList}
-              data={filteredApps}
-              keyExtractor={(item: InstalledApp) => item.packageName}
-              renderItem={renderAppItem}
-              numColumns={drawerColumns}
-              contentContainerStyle={[
-                styles.listContent,
-                {paddingBottom: bottomPadding},
-              ]}
-              showsVerticalScrollIndicator={true}
-              nestedScrollEnabled={true}
-              bounces={false}
-              overScrollMode="never"
-              keyboardShouldPersistTaps="handled"
-              initialNumToRender={20}
-              maxToRenderPerBatch={25}
-              windowSize={10}
-            />
-          )}
-        </View>
+        ) : (
+          <BottomSheetFlatList
+            key={`drawer-grid-${drawerColumns}`}
+            style={styles.flatList}
+            data={filteredApps}
+            keyExtractor={(item: InstalledApp) => item.packageName}
+            renderItem={renderAppItem}
+            numColumns={drawerColumns}
+            ListHeaderComponent={renderHeader}
+            stickyHeaderIndices={[0]}
+            ListEmptyComponent={
+              <View style={styles.emptyContainer}>
+                <Text style={styles.emptyEmoji}>🔍</Text>
+                <Text
+                  style={[
+                    styles.emptyTitle,
+                    {color: isDark ? '#F8FAFC' : '#0F172A'},
+                  ]}>
+                  No Apps Found
+                </Text>
+                <Text
+                  style={[
+                    styles.emptySubtitle,
+                    {color: isDark ? '#94A3B8' : '#64748B'},
+                  ]}>
+                  No application matches "{searchQuery}"
+                </Text>
+              </View>
+            }
+            contentContainerStyle={[
+              styles.listContent,
+              {paddingBottom: bottomPadding},
+            ]}
+            showsVerticalScrollIndicator={true}
+            keyboardShouldPersistTaps="handled"
+            initialNumToRender={25}
+            maxToRenderPerBatch={25}
+            windowSize={11}
+          />
+        )}
       </BottomSheet>
     );
   },
@@ -442,6 +446,7 @@ const styles = StyleSheet.create({
     marginTop: 4,
   },
   pinnedHeader: {
+    marginHorizontal: -HORIZONTAL_PADDING,
     paddingHorizontal: 16,
     paddingTop: 6,
     paddingBottom: 10,
@@ -543,3 +548,6 @@ const styles = StyleSheet.create({
     textAlign: 'center',
   },
 });
+
+export const PixelAppDrawer = React.memo(PixelAppDrawerComponent);
+

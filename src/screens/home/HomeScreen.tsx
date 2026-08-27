@@ -1,44 +1,24 @@
-import React, {useState, useEffect, useCallback, useRef, useMemo} from 'react';
+import React, {
+  useState,
+  useEffect,
+  useCallback,
+  useRef,
+  useMemo,
+} from 'react';
 import {
   View,
   ScrollView,
   StyleSheet,
   StatusBar,
   BackHandler,
-  TouchableOpacity,
   Alert,
+  Linking,
 } from 'react-native';
-import {useFocusEffect} from '@react-navigation/native';
-import {useSafeAreaInsets} from 'react-native-safe-area-context';
-import {
-  Phone,
-  MessageCircle,
-  Video,
-  Camera,
-  User,
-  PlaySquare,
-  Image as ImageIcon,
-  Pill,
-  Flashlight,
-  ShieldAlert,
-  LayoutGrid,
-  Settings,
-  Sun,
-  Star,
-} from 'lucide-react-native';
-import {useTheme} from '../../theme';
-import {
-  EHText,
-  EHButton,
-  EHIconButton,
-  EHCard,
-  EHAvatar,
-  EHSection,
-  EHBottomSheet,
-  EHModal,
-} from '../../components';
-import {PixelAppDrawer, PixelAppDrawerRef} from '../../components/apps';
-import {useAppSelector} from '../../store';
+import { useFocusEffect } from '@react-navigation/native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { useTheme } from '../../theme';
+import { PixelAppDrawer, PixelAppDrawerRef } from '../../components/apps';
+import { useAppSelector } from '../../store';
 import {
   ContactsService,
   CameraService,
@@ -46,11 +26,25 @@ import {
   TorchService,
   AppsService,
 } from '../../services';
-import {FamilyMember} from '../../types/models';
-import type {RootStackScreenProps} from '../../navigation/types';
+import { FamilyMember, Reminder } from '../../types/models';
+import type { RootStackScreenProps } from '../../navigation/types';
+import {
+  HomeHeader,
+  HomeFamilySection,
+  HomeQuickCommSection,
+  HomeCameraSection,
+  HomeEntertainmentSection,
+  HomeUtilitiesSection,
+  HomeSosSection,
+  HomeBottomBar,
+  HomeSosModal,
+  HomeContactSheet,
+} from './components';
 
-export default function HomeScreen({navigation}: RootStackScreenProps<'Home'>) {
-  const {colors, spacing, borderRadius, isDark} = useTheme();
+export default function HomeScreen({
+  navigation,
+}: RootStackScreenProps<'Home'>) {
+  const { colors, spacing } = useTheme();
   const insets = useSafeAreaInsets();
   const appDrawerRef = useRef<PixelAppDrawerRef>(null);
   const scrollViewRef = useRef<React.ElementRef<typeof ScrollView>>(null);
@@ -111,26 +105,19 @@ export default function HomeScreen({navigation}: RootStackScreenProps<'Home'>) {
   useEffect(() => {
     updateTime();
     const interval = setInterval(updateTime, 1000);
-    TorchService.isTorchActive().then(setTorchActive).catch(() => {});
+    TorchService.isTorchActive()
+      .then(setTorchActive)
+      .catch(() => {});
     return () => clearInterval(interval);
   }, [updateTime]);
 
-  // Primary emergency contact
-  const primaryContact: FamilyMember = useMemo(() => {
-    return (
-      familyMembers[0] || {
-        id: 'primary-default',
-        name: 'Family',
-        relationship: 'Primary Contact',
-        phoneNumber: '911',
-        photo: null,
-        preferredCommunication: 'call',
-      }
-    );
+  // Primary emergency contact (null if no family added yet)
+  const primaryContact: FamilyMember | null = useMemo(() => {
+    return familyMembers[0] || null;
   }, [familyMembers]);
 
   // Next active reminder
-  const nextReminder = useMemo(() => {
+  const nextReminder: Reminder = useMemo(() => {
     return (
       reminders.find(r => r.enabled) || {
         id: 'default',
@@ -138,6 +125,8 @@ export default function HomeScreen({navigation}: RootStackScreenProps<'Home'>) {
         description: 'Scheduled reminder',
         time: '1:00 PM',
         type: 'medicine',
+        recurring: true,
+        recurringPattern: 'daily',
         enabled: true,
       }
     );
@@ -146,9 +135,8 @@ export default function HomeScreen({navigation}: RootStackScreenProps<'Home'>) {
   // Auto scroll to top & prevent exiting launcher when on root Home screen
   useFocusEffect(
     useCallback(() => {
-      // Always scroll to top when navigating to or focusing main home screen
       requestAnimationFrame(() => {
-        scrollViewRef.current?.scrollTo({y: 0, animated: false});
+        scrollViewRef.current?.scrollTo({ y: 0, animated: false });
       });
 
       const onBackPress = () => {
@@ -176,21 +164,53 @@ export default function HomeScreen({navigation}: RootStackScreenProps<'Home'>) {
     }, [selectedFamilyMember, sosModalVisible]),
   );
 
+  // Quick direct app openers (Phone dialer & WhatsApp)
+  const handleOpenPhone = async () => {
+    try {
+      await ContactsService.openDialer();
+    } catch (error: any) {
+      Alert.alert('Phone App', 'Could not open Phone app: ' + error?.message);
+    }
+  };
+
+  const handleOpenWhatsApp = async () => {
+    try {
+      await AppsService.launchApp('com.whatsapp');
+    } catch (error: any) {
+      try {
+        await Linking.openURL('whatsapp://app');
+      } catch {
+        Alert.alert(
+          'WhatsApp Not Found',
+          'Please install WhatsApp from the Google Play Store.',
+        );
+      }
+    }
+  };
+
   // Real Action handlers with native calling and messaging
-  const handleCall = async (member: FamilyMember) => {
+  const handleCall = async (member: FamilyMember | null) => {
     setSelectedFamilyMember(null);
+    if (!member) {
+      return;
+    }
     try {
       await ContactsService.makeDirectCall(member.phoneNumber);
     } catch (error: any) {
       Alert.alert(
         'Cannot Call',
-        `Failed to call ${member.name}.\n\nError: ${error?.message || 'Unknown'}`,
+        `Failed to call ${member.name}.\n\nError: ${
+          error?.message || 'Unknown'
+        }`,
       );
     }
   };
 
-  const handleWhatsApp = async (member: FamilyMember) => {
+  const handleWhatsApp = async (member: FamilyMember | null) => {
     setSelectedFamilyMember(null);
+    if (!member) {
+      return;
+    }
     try {
       await ContactsService.openWhatsApp(member.phoneNumber);
     } catch (error: any) {
@@ -215,24 +235,15 @@ export default function HomeScreen({navigation}: RootStackScreenProps<'Home'>) {
     }
   };
 
-  // Native Camera Actions (Photo, Selfie, Video)
-  const handleCameraAction = async (mode: string) => {
+  // Direct Native Camera Actions (Photo, Selfie, Video)
+  const handleCameraAction = async (mode: 'Photo' | 'Selfie' | 'Video') => {
     try {
       if (mode === 'Photo') {
-        const result = await CameraService.takePhoto();
-        if (result.error) {
-          Alert.alert('Camera Error', result.error);
-        }
+        await CameraService.takePhoto();
       } else if (mode === 'Selfie') {
-        const result = await CameraService.takeSelfie();
-        if (result.error) {
-          Alert.alert('Camera Error', result.error);
-        }
+        await CameraService.takeSelfie();
       } else if (mode === 'Video') {
-        const result = await CameraService.recordVideo();
-        if (result.error) {
-          Alert.alert('Camera Error', result.error);
-        }
+        await CameraService.recordVideo();
       }
     } catch (error: any) {
       Alert.alert('Camera', 'Could not open camera: ' + error?.message);
@@ -240,20 +251,19 @@ export default function HomeScreen({navigation}: RootStackScreenProps<'Home'>) {
   };
 
   // Entertainment Actions (YouTube & Gallery)
-  const handleEntertainmentAction = async (name: string) => {
+  const handleEntertainmentAction = async (name: 'YouTube' | 'Gallery') => {
     try {
       if (name === 'YouTube') {
-        const isInstalled = await AppsService.isAppInstalled('com.google.android.youtube');
+        const isInstalled = await AppsService.isAppInstalled(
+          'com.google.android.youtube',
+        );
         if (isInstalled) {
           await AppsService.launchApp('com.google.android.youtube');
         } else {
           await AppsService.launchApp('com.android.chrome');
         }
       } else if (name === 'Gallery') {
-        const result = await GalleryService.openGallery();
-        if (result.error) {
-          Alert.alert('Gallery Error', result.error);
-        }
+        await GalleryService.openGallery();
       }
     } catch (error: any) {
       Alert.alert(name, 'Could not open ' + name + ': ' + error?.message);
@@ -265,24 +275,31 @@ export default function HomeScreen({navigation}: RootStackScreenProps<'Home'>) {
     try {
       const isAvailable = await TorchService.isAvailable();
       if (!isAvailable) {
-        Alert.alert('Flashlight', 'Flashlight hardware is not available on this device.');
+        Alert.alert(
+          'Flashlight',
+          'Flashlight hardware is not available on this device.',
+        );
         return;
       }
       const newState = await TorchService.toggle();
       setTorchActive(newState);
     } catch (error: any) {
-      Alert.alert('Flashlight', 'Could not toggle flashlight: ' + error?.message);
+      Alert.alert(
+        'Flashlight',
+        'Could not toggle flashlight: ' + error?.message,
+      );
     }
   };
 
   const handleSosTrigger = async () => {
     setSosModalVisible(false);
+    const targetNumber = primaryContact?.phoneNumber || '112';
     try {
-      await ContactsService.makeDirectCall(primaryContact.phoneNumber);
+      await ContactsService.makeDirectCall(targetNumber);
     } catch (error: any) {
       Alert.alert(
         'Emergency Alert',
-        `Calling emergency contact ${primaryContact.name} (${primaryContact.phoneNumber})...`,
+        `Calling emergency (${targetNumber})...`,
       );
     }
   };
@@ -291,7 +308,7 @@ export default function HomeScreen({navigation}: RootStackScreenProps<'Home'>) {
   const bottomPadding = insets.bottom > 0 ? insets.bottom + 60 : 80;
 
   return (
-    <View style={[styles.container, {backgroundColor: colors.background}]}>
+    <View style={[styles.container, { backgroundColor: colors.background }]}>
       <StatusBar barStyle={colors.statusBar} />
 
       <ScrollView
@@ -304,341 +321,70 @@ export default function HomeScreen({navigation}: RootStackScreenProps<'Home'>) {
             paddingBottom: bottomPadding,
           },
         ]}
-        showsVerticalScrollIndicator={false}>
+        showsVerticalScrollIndicator={false}
+      >
         {/* 1. Header: Greeting, Live Clock & Weather */}
-        <View style={styles.topSection}>
-          {parentProfile?.name && (
-            <EHText
-              variant="caption"
-              color={colors.textSecondary}
-              style={styles.greetingText}>
-              Welcome, {parentProfile.name}
-            </EHText>
-          )}
-
-          <EHText variant="heading1" weight="800" style={styles.clockText}>
-            {currentTime}
-          </EHText>
-
-          <EHText variant="body" color={colors.textSecondary} weight="500">
-            {currentDate}
-          </EHText>
-
-          {/* Weather pill badge */}
-          <View
-            style={[
-              styles.weatherPill,
-              {
-                backgroundColor: isDark
-                  ? 'rgba(30, 41, 59, 0.8)'
-                  : 'rgba(241, 245, 249, 0.9)',
-                borderColor: colors.border,
-              },
-            ]}>
-            <Sun size={15} color={colors.warning} style={styles.weatherIcon} />
-            <EHText variant="caption" weight="600">
-              29°C • Sunny • Home
-            </EHText>
-          </View>
-        </View>
+        <HomeHeader
+          parentName={parentProfile?.name}
+          currentTime={currentTime}
+          currentDate={currentDate}
+        />
 
         {/* 2. Family Contacts Row */}
-        <EHSection
-          title="Family & Loved Ones"
-          subtitle="Tap any photo to call or message"
-          action={{
-            label: 'See All →',
-            onPress: () => navigation.navigate('Family'),
-          }}>
-          <ScrollView
-            horizontal
-            showsHorizontalScrollIndicator={false}
-            contentContainerStyle={styles.familyScroll}>
-            {familyMembers.map((member, index) => (
-              <EHCard
-                key={member.id}
-                style={styles.familyCard}
-                onPress={() => setSelectedFamilyMember(member)}
-                elevation="medium">
-                <View style={styles.avatarWrapper}>
-                  <EHAvatar
-                    source={member.photo}
-                    name={member.name}
-                    size={64}
-                  />
-                  {index === 0 && (
-                    <View
-                      style={[
-                        styles.starBadge,
-                        {backgroundColor: colors.primary},
-                      ]}>
-                      <Star size={11} color="#FFFFFF" fill="#FFFFFF" />
-                    </View>
-                  )}
-                </View>
-
-                <EHText
-                  variant="body"
-                  weight="700"
-                  numberOfLines={1}
-                  style={styles.familyName}>
-                  {member.name}
-                </EHText>
-
-                <EHText
-                  variant="caption"
-                  color={colors.textSecondary}
-                  numberOfLines={1}>
-                  {member.relationship}
-                </EHText>
-              </EHCard>
-            ))}
-          </ScrollView>
-        </EHSection>
+        <HomeFamilySection
+          familyMembers={familyMembers}
+          onSelectMember={setSelectedFamilyMember}
+          onSeeAll={() => navigation.navigate('Family')}
+        />
 
         {/* 3. Primary Communication Grid */}
-        <EHSection title="Quick Communication">
-          <View style={styles.grid2}>
-            <EHIconButton
-              icon={<Phone size={32} color={colors.primary} />}
-              label="Phone Call"
-              subtitle={`Call ${primaryContact.name}`}
-              onPress={() => handleCall(primaryContact)}
-            />
-            <EHIconButton
-              icon={<MessageCircle size={32} color={colors.primary} />}
-              label="WhatsApp"
-              subtitle="Send Message"
-              onPress={() => handleWhatsApp(primaryContact)}
-            />
-          </View>
-        </EHSection>
+        <HomeQuickCommSection
+          onOpenPhone={handleOpenPhone}
+          onOpenWhatsApp={handleOpenWhatsApp}
+        />
 
         {/* 4. Camera Suite */}
-        <EHSection title="Camera & Photos">
-          <View style={styles.grid3}>
-            <EHIconButton
-              icon={<Camera size={28} color={colors.primary} />}
-              label="Photo"
-              subtitle="Camera"
-              onPress={() => handleCameraAction('Photo')}
-              style={styles.grid3Item}
-            />
-            <EHIconButton
-              icon={<User size={28} color={colors.primary} />}
-              label="Selfie"
-              subtitle="Front Camera"
-              onPress={() => handleCameraAction('Selfie')}
-              style={styles.grid3Item}
-            />
-            <EHIconButton
-              icon={<Video size={28} color={colors.primary} />}
-              label="Video"
-              subtitle="Record"
-              onPress={() => handleCameraAction('Video')}
-              style={styles.grid3Item}
-            />
-          </View>
-        </EHSection>
+        <HomeCameraSection onCameraAction={handleCameraAction} />
 
         {/* 5. Entertainment Suite */}
-        <EHSection title="Entertainment">
-          <View style={styles.grid2}>
-            <EHIconButton
-              icon={<PlaySquare size={32} color={colors.primary} />}
-              label="YouTube"
-              subtitle="Videos & Music"
-              onPress={() => handleEntertainmentAction('YouTube')}
-            />
-            <EHIconButton
-              icon={<ImageIcon size={32} color={colors.primary} />}
-              label="Photos"
-              subtitle="My Gallery"
-              onPress={() => handleEntertainmentAction('Gallery')}
-            />
-          </View>
-        </EHSection>
+        <HomeEntertainmentSection
+          onEntertainmentAction={handleEntertainmentAction}
+        />
 
         {/* 6. Daily Utilities & Medication Reminder */}
-        <EHSection title="Daily Utilities">
-          <View style={styles.utilitiesStack}>
-            {/* Medication Card */}
-            <EHCard style={styles.reminderCard} elevation="low">
-              <View style={styles.reminderRow}>
-                <View
-                  style={[
-                    styles.reminderIconCircle,
-                    {backgroundColor: colors.primaryLight},
-                  ]}>
-                  <Pill size={24} color={colors.primary} />
-                </View>
-                <View style={styles.reminderTextCol}>
-                  <EHText variant="caption" color={colors.primary} weight="700">
-                    UPCOMING REMINDER
-                  </EHText>
-                  <EHText variant="body" weight="700">
-                    {nextReminder.title}
-                  </EHText>
-                  <EHText variant="caption" color={colors.textSecondary}>
-                    Scheduled for {nextReminder.time}
-                  </EHText>
-                </View>
-                <EHButton
-                  label="Done"
-                  variant="outline"
-                  onPress={() =>
-                    Alert.alert('Reminder Marked Done', 'Great job taking care!')
-                  }
-                  style={styles.reminderDoneBtn}
-                />
-              </View>
-            </EHCard>
-
-            {/* Torch Tile */}
-            <EHIconButton
-              icon={
-                <Flashlight
-                  size={32}
-                  color={torchActive ? colors.warning : colors.textPrimary}
-                />
-              }
-              label={torchActive ? 'Torch ON' : 'Torch OFF'}
-              subtitle={torchActive ? 'Tap to turn off' : 'Tap to turn on'}
-              backgroundColor={
-                torchActive ? colors.warningLight : colors.surface
-              }
-              onPress={handleTorchToggle}
-            />
-          </View>
-        </EHSection>
+        <HomeUtilitiesSection
+          reminder={nextReminder}
+          torchActive={torchActive}
+          onTorchToggle={handleTorchToggle}
+        />
 
         {/* 7. Emergency SOS Section */}
-        <EHSection title="Safety & Support">
-          <EHButton
-            label="EMERGENCY HELP / SOS"
-            icon={<ShieldAlert size={22} color="#FFFFFF" />}
-            variant="danger"
-            onPress={() => setSosModalVisible(true)}
-            style={styles.sosButton}
-          />
-        </EHSection>
+        <HomeSosSection onSosPress={() => setSosModalVisible(true)} />
 
         {/* 8. Bottom Launcher Navigation */}
-        <View style={styles.bottomBar}>
-          <TouchableOpacity
-            style={[
-              styles.bottomBarBtn,
-              {
-                backgroundColor: colors.surface,
-                borderColor: colors.border,
-                borderRadius: borderRadius.lg,
-              },
-            ]}
-            onPress={() => appDrawerRef.current?.open()}
-            activeOpacity={0.75}>
-            <LayoutGrid size={28} color={colors.primary} style={styles.bottomBarIcon} />
-            <EHText variant="body" weight="700">
-              All Apps
-            </EHText>
-            <EHText variant="caption" color={colors.textSecondary}>
-              Swipe up or tap
-            </EHText>
-          </TouchableOpacity>
-
-          <TouchableOpacity
-            style={[
-              styles.bottomBarBtn,
-              {
-                backgroundColor: colors.surface,
-                borderColor: colors.border,
-                borderRadius: borderRadius.lg,
-              },
-            ]}
-            onPress={() => navigation.navigate('Settings')}
-            activeOpacity={0.75}>
-            <Settings size={28} color={colors.primary} style={styles.bottomBarIcon} />
-            <EHText variant="body" weight="700">
-              Settings
-            </EHText>
-            <EHText variant="caption" color={colors.textSecondary}>
-              Theme & layout
-            </EHText>
-          </TouchableOpacity>
-        </View>
+        <HomeBottomBar
+          onOpenDrawer={() => appDrawerRef.current?.open()}
+          onOpenSettings={() => navigation.navigate('Settings')}
+        />
       </ScrollView>
 
       {/* Communication Bottom Sheet for Selected Family Member */}
-      <EHBottomSheet
-        visible={!!selectedFamilyMember}
+      <HomeContactSheet
+        member={selectedFamilyMember}
         onClose={() => setSelectedFamilyMember(null)}
-        title={
-          selectedFamilyMember
-            ? `Contact ${selectedFamilyMember.name} (${selectedFamilyMember.relationship})`
-            : 'Contact'
-        }>
-        {selectedFamilyMember && (
-          <View style={styles.sheetContent}>
-            <EHButton
-              label={`Normal Phone Call`}
-              icon={<Phone size={18} color="#FFFFFF" />}
-              variant="primary"
-              onPress={() => handleCall(selectedFamilyMember)}
-              style={styles.sheetBtn}
-            />
-            <EHButton
-              label={`WhatsApp Message`}
-              icon={<MessageCircle size={18} color={colors.primary} />}
-              variant="secondary"
-              onPress={() => handleWhatsApp(selectedFamilyMember)}
-              style={styles.sheetBtn}
-            />
-            <EHButton
-              label={`Video Call`}
-              icon={<Video size={18} color={colors.primary} />}
-              variant="outline"
-              onPress={() => handleVideoCall(selectedFamilyMember)}
-              style={styles.sheetBtn}
-            />
-            <EHButton
-              label="Cancel"
-              variant="ghost"
-              onPress={() => setSelectedFamilyMember(null)}
-              style={styles.sheetBtn}
-            />
-          </View>
-        )}
-      </EHBottomSheet>
+        onCall={handleCall}
+        onWhatsApp={handleWhatsApp}
+        onVideoCall={handleVideoCall}
+      />
 
       {/* Emergency SOS Confirmation Modal */}
-      <EHModal
+      <HomeSosModal
         visible={sosModalVisible}
+        primaryContact={primaryContact}
         onClose={() => setSosModalVisible(false)}
-        title="Emergency SOS">
-        <View style={styles.modalContent}>
-          <EHText variant="body" style={styles.modalText}>
-            Are you sure you want to trigger Emergency SOS? This will immediately
-            call your primary contact{' '}
-            <EHText variant="body" weight="700">
-              {primaryContact.name} ({primaryContact.phoneNumber})
-            </EHText>{' '}
-            and notify family members with your location.
-          </EHText>
-
-          <EHButton
-            label={`Yes, Call ${primaryContact.name}`}
-            icon={<Phone size={18} color="#FFFFFF" />}
-            variant="danger"
-            onPress={handleSosTrigger}
-            style={styles.modalActionBtn}
-          />
-          <EHButton
-            label="Cancel / I'm Okay"
-            variant="outline"
-            onPress={() => setSosModalVisible(false)}
-            style={styles.modalActionBtn}
-          />
-        </View>
-      </EHModal>
+        onConfirm={handleSosTrigger}
+        onConfigureContacts={() => navigation.navigate('Family')}
+      />
 
       {/* Pixel UI App Drawer BottomSheet */}
       <PixelAppDrawer ref={appDrawerRef} />
@@ -651,128 +397,4 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   scrollContent: {},
-  topSection: {
-    alignItems: 'center',
-    marginBottom: 20,
-  },
-  greetingText: {
-    marginBottom: 4,
-  },
-  clockText: {
-    letterSpacing: 1,
-    marginVertical: 2,
-  },
-  weatherPill: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginTop: 10,
-    paddingHorizontal: 16,
-    paddingVertical: 6,
-    borderRadius: 20,
-    borderWidth: 1,
-  },
-  weatherIcon: {
-    marginRight: 6,
-  },
-  familyScroll: {
-    paddingVertical: 4,
-    gap: 12,
-  },
-  familyCard: {
-    width: 120,
-    alignItems: 'center',
-    paddingVertical: 14,
-    paddingHorizontal: 8,
-  },
-  avatarWrapper: {
-    position: 'relative',
-    marginBottom: 8,
-  },
-  starBadge: {
-    position: 'absolute',
-    bottom: -2,
-    right: -2,
-    width: 20,
-    height: 20,
-    borderRadius: 10,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  familyName: {
-    marginTop: 2,
-    textAlign: 'center',
-  },
-  grid2: {
-    flexDirection: 'row',
-    gap: 12,
-  },
-  grid3: {
-    flexDirection: 'row',
-    gap: 8,
-  },
-  grid3Item: {
-    flex: 1,
-    paddingHorizontal: 4,
-  },
-  utilitiesStack: {
-    gap: 12,
-  },
-  reminderCard: {
-    padding: 14,
-  },
-  reminderRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-  },
-  reminderIconCircle: {
-    width: 46,
-    height: 46,
-    borderRadius: 23,
-    justifyContent: 'center',
-    alignItems: 'center',
-    marginRight: 12,
-  },
-  reminderTextCol: {
-    flex: 1,
-  },
-  reminderDoneBtn: {
-    minHeight: 40,
-    paddingHorizontal: 14,
-    paddingVertical: 6,
-  },
-  sosButton: {
-    minHeight: 64,
-  },
-  bottomBar: {
-    flexDirection: 'row',
-    gap: 12,
-    marginTop: 16,
-  },
-  bottomBarBtn: {
-    flex: 1,
-    alignItems: 'center',
-    justifyContent: 'center',
-    paddingVertical: 16,
-    paddingHorizontal: 8,
-    borderWidth: 1,
-  },
-  bottomBarIcon: {
-    marginBottom: 6,
-  },
-  sheetContent: {
-    gap: 12,
-  },
-  sheetBtn: {
-    minHeight: 52,
-  },
-  modalContent: {
-    gap: 12,
-  },
-  modalText: {
-    marginBottom: 8,
-    lineHeight: 24,
-  },
-  modalActionBtn: {
-    minHeight: 52,
-  },
 });

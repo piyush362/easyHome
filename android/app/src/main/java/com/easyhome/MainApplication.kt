@@ -10,6 +10,8 @@ import com.easyhome.launcher.LauncherPackage
 import com.easyhome.apps.AppDiscoveryPackage
 import com.easyhome.contacts.ContactsPackage
 import com.easyhome.torch.TorchPackage
+import com.easyhome.camera.CameraPackage
+import com.easyhome.image.ImageCompressorPackage
 
 class MainApplication : Application(), ReactApplication {
 
@@ -23,6 +25,8 @@ class MainApplication : Application(), ReactApplication {
           add(AppDiscoveryPackage())
           add(ContactsPackage())
           add(TorchPackage())
+          add(CameraPackage())
+          add(ImageCompressorPackage())
         },
     )
   }

@@ -19,6 +19,8 @@ class ContactsModule(private val reactContext: ReactApplicationContext) :
 
   private var permissionPromise: Promise? = null
   private val PERMISSION_REQUEST_CODE = 4401
+  private val PERMISSION_REQUEST_CODE_CALL = 4402
+  private var callPermissionPromise: Promise? = null
 
   /**
    * Checks if READ_CONTACTS runtime permission is granted.
@@ -82,6 +84,36 @@ class ContactsModule(private val reactContext: ReactApplicationContext) :
     }
   }
 
+  /**
+   * Requests CALL_PHONE permission from the user.
+   */
+  @ReactMethod
+  fun requestCallPermission(promise: Promise) {
+    val activity = reactContext.currentActivity
+    if (activity == null) {
+      promise.reject("NO_ACTIVITY", "Cannot request permission without active activity")
+      return
+    }
+
+    if (ContextCompat.checkSelfPermission(
+        reactContext, Manifest.permission.CALL_PHONE) ==
+        PackageManager.PERMISSION_GRANTED) {
+      promise.resolve(true)
+      return
+    }
+
+    if (activity is PermissionAwareActivity) {
+      callPermissionPromise = promise
+      activity.requestPermissions(
+          arrayOf(Manifest.permission.CALL_PHONE),
+          PERMISSION_REQUEST_CODE_CALL,
+          this
+      )
+    } else {
+      promise.reject("ACTIVITY_NOT_PERMISSION_AWARE", "Activity cannot request runtime permissions")
+    }
+  }
+
   override fun onRequestPermissionsResult(
       requestCode: Int,
       permissions: Array<String>,
@@ -91,6 +123,12 @@ class ContactsModule(private val reactContext: ReactApplicationContext) :
       val granted = grantResults.isNotEmpty() && grantResults[0] == PackageManager.PERMISSION_GRANTED
       permissionPromise?.resolve(granted)
       permissionPromise = null
+      return true
+    }
+    if (requestCode == PERMISSION_REQUEST_CODE_CALL) {
+      val granted = grantResults.isNotEmpty() && grantResults[0] == PackageManager.PERMISSION_GRANTED
+      callPermissionPromise?.resolve(granted)
+      callPermissionPromise = null
       return true
     }
     return false
@@ -183,10 +221,18 @@ class ContactsModule(private val reactContext: ReactApplicationContext) :
 
       val action = if (hasCallPermission) Intent.ACTION_CALL else Intent.ACTION_DIAL
       val intent = Intent(action, Uri.parse("tel:${Uri.encode(cleanNumber)}")).apply {
-        addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+        addFlags(Intent.FLAG_ACTIVITY_NO_ANIMATION)
       }
 
-      reactContext.startActivity(intent)
+      val activity = reactContext.currentActivity
+      if (activity != null) {
+        activity.startActivity(intent)
+        activity.overridePendingTransition(0, 0)
+      } else {
+        intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+        reactContext.startActivity(intent)
+      }
+
       promise.resolve(true)
     } catch (e: Exception) {
       promise.reject("CALL_ERROR", e.message, e)
@@ -214,20 +260,32 @@ class ContactsModule(private val reactContext: ReactApplicationContext) :
       val url = "https://api.whatsapp.com/send?phone=$cleanNumber$textParam"
       val intent = Intent(Intent.ACTION_VIEW, Uri.parse(url)).apply {
         setPackage("com.whatsapp")
-        addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+        addFlags(Intent.FLAG_ACTIVITY_NO_ANIMATION)
       }
 
-      // Check if WhatsApp package is installed
+      val activity = reactContext.currentActivity
       val pm = reactContext.packageManager
       if (intent.resolveActivity(pm) != null) {
-        reactContext.startActivity(intent)
+        if (activity != null) {
+          activity.startActivity(intent)
+          activity.overridePendingTransition(0, 0)
+        } else {
+          intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+          reactContext.startActivity(intent)
+        }
         promise.resolve(true)
       } else {
         // Fallback: Open URL in standard browser/chooser
         val browserIntent = Intent(Intent.ACTION_VIEW, Uri.parse(url)).apply {
-          addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+          addFlags(Intent.FLAG_ACTIVITY_NO_ANIMATION)
         }
-        reactContext.startActivity(browserIntent)
+        if (activity != null) {
+          activity.startActivity(browserIntent)
+          activity.overridePendingTransition(0, 0)
+        } else {
+          browserIntent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+          reactContext.startActivity(browserIntent)
+        }
         promise.resolve(true)
       }
     } catch (e: Exception) {
@@ -246,13 +304,44 @@ class ContactsModule(private val reactContext: ReactApplicationContext) :
         if (!message.isNullOrEmpty()) {
           putExtra("sms_body", message)
         }
-        addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+        addFlags(Intent.FLAG_ACTIVITY_NO_ANIMATION)
       }
 
-      reactContext.startActivity(intent)
+      val activity = reactContext.currentActivity
+      if (activity != null) {
+        activity.startActivity(intent)
+        activity.overridePendingTransition(0, 0)
+      } else {
+        intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+        reactContext.startActivity(intent)
+      }
+
       promise.resolve(true)
     } catch (e: Exception) {
       promise.reject("SMS_ERROR", e.message, e)
+    }
+  }
+
+  /**
+   * Directly opens the default Phone Dialer application.
+   */
+  @ReactMethod
+  fun openDialer(promise: Promise) {
+    try {
+      val intent = Intent(Intent.ACTION_DIAL).apply {
+        addFlags(Intent.FLAG_ACTIVITY_NO_ANIMATION)
+      }
+      val activity = reactContext.currentActivity
+      if (activity != null) {
+        activity.startActivity(intent)
+        activity.overridePendingTransition(0, 0)
+      } else {
+        intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+        reactContext.startActivity(intent)
+      }
+      promise.resolve(true)
+    } catch (e: Exception) {
+      promise.reject("DIALER_ERROR", "Could not open dialer: ${e.message}", e)
     }
   }
 }

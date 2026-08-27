@@ -49,6 +49,7 @@ NativeModules.ContactsModule = {
   hasContactsPermission: jest.fn().mockResolvedValue(true),
   hasCallPermission: jest.fn().mockResolvedValue(true),
   requestContactsPermission: jest.fn().mockResolvedValue(true),
+  requestCallPermission: jest.fn().mockResolvedValue(true),
   getDeviceContacts: jest.fn().mockResolvedValue([
     {
       id: 'mock-1',
@@ -60,6 +61,7 @@ NativeModules.ContactsModule = {
   makeDirectCall: jest.fn().mockResolvedValue(true),
   openWhatsApp: jest.fn().mockResolvedValue(true),
   sendSMS: jest.fn().mockResolvedValue(true),
+  openDialer: jest.fn().mockResolvedValue(true),
 };
 
 NativeModules.TorchModule = {
@@ -68,6 +70,22 @@ NativeModules.TorchModule = {
   turnOn: jest.fn().mockResolvedValue(true),
   turnOff: jest.fn().mockResolvedValue(false),
   toggle: jest.fn().mockResolvedValue(true),
+};
+
+NativeModules.CameraModule = {
+  openCamera: jest.fn().mockResolvedValue(true),
+  openSelfie: jest.fn().mockResolvedValue(true),
+  openVideoCamera: jest.fn().mockResolvedValue(true),
+  openGallery: jest.fn().mockResolvedValue(true),
+};
+
+NativeModules.ImageCompressorModule = {
+  compressImage: jest.fn().mockResolvedValue({
+    uri: 'file://mock-compressed.jpg',
+    width: 512,
+    height: 512,
+    sizeBytes: 45000,
+  }),
 };
 
 // Mock react-native-image-picker

@@ -11,10 +11,12 @@ export interface ContactsNativeModuleInterface {
   hasContactsPermission(): Promise<boolean>;
   hasCallPermission(): Promise<boolean>;
   requestContactsPermission(): Promise<boolean>;
+  requestCallPermission(): Promise<boolean>;
   getDeviceContacts(): Promise<DeviceContact[]>;
   makeDirectCall(phoneNumber: string): Promise<boolean>;
   openWhatsApp(phoneNumber: string, message?: string | null): Promise<boolean>;
   sendSMS(phoneNumber: string, message?: string | null): Promise<boolean>;
+  openDialer(): Promise<boolean>;
 }
 
 export const ContactsNativeModule: ContactsNativeModuleInterface =
@@ -22,8 +24,10 @@ export const ContactsNativeModule: ContactsNativeModuleInterface =
     hasContactsPermission: async () => false,
     hasCallPermission: async () => false,
     requestContactsPermission: async () => false,
+    requestCallPermission: async () => false,
     getDeviceContacts: async () => [],
     makeDirectCall: async () => false,
     openWhatsApp: async () => false,
     sendSMS: async () => false,
+    openDialer: async () => false,
   };

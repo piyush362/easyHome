@@ -1,7 +1,10 @@
+import {Linking} from 'react-native';
 import {
   ContactsNativeModule,
   DeviceContact,
 } from '../native/ContactsNativeModule';
+
+export type {DeviceContact};
 
 export class ContactsService {
   /**
@@ -48,18 +51,64 @@ export class ContactsService {
   }
 
   /**
-   * Make a direct phone call to the contact.
+   * Check if CALL_PHONE runtime permission is granted.
+   */
+  static async hasCallPermission(): Promise<boolean> {
+    try {
+      if (typeof ContactsNativeModule?.hasCallPermission === 'function') {
+        return await ContactsNativeModule.hasCallPermission();
+      }
+      return false;
+    } catch {
+      return false;
+    }
+  }
+
+  /**
+   * Request CALL_PHONE runtime permission from user.
+   */
+  static async requestCallPermission(): Promise<boolean> {
+    try {
+      if (typeof ContactsNativeModule?.requestCallPermission === 'function') {
+        return await ContactsNativeModule.requestCallPermission();
+      }
+      return false;
+    } catch {
+      return false;
+    }
+  }
+
+  /**
+   * Make a direct phone call immediately.
+   * Prompts CALL_PHONE permission on first use so calls dial instantly without opening dialer!
    */
   static async makeDirectCall(phoneNumber: string): Promise<boolean> {
     try {
       const clean = this.sanitizePhoneNumber(phoneNumber);
       if (!clean) {
-        throw new Error('Invalid phone number');
+        return await this.openDialer();
       }
-      return await ContactsNativeModule.makeDirectCall(clean);
+
+      // Check / request CALL_PHONE permission for instant one-tap calling
+      const hasCallPerm = await this.hasCallPermission();
+      if (!hasCallPerm) {
+        await this.requestCallPermission();
+      }
+
+      if (typeof ContactsNativeModule?.makeDirectCall === 'function') {
+        return await ContactsNativeModule.makeDirectCall(clean);
+      }
+      await Linking.openURL(`tel:${clean}`);
+      return true;
     } catch (error) {
       console.warn('[ContactsService] Error initiating call:', error);
-      throw error;
+      try {
+        const clean = this.sanitizePhoneNumber(phoneNumber);
+        await Linking.openURL(clean ? `tel:${clean}` : 'tel:');
+        return true;
+      } catch (linkingErr) {
+        throw error;
+      }
     }
   }
 
@@ -75,9 +124,19 @@ export class ContactsService {
       if (!clean) {
         throw new Error('Invalid phone number');
       }
-      return await ContactsNativeModule.openWhatsApp(clean, message || null);
+      if (typeof ContactsNativeModule?.openWhatsApp === 'function') {
+        return await ContactsNativeModule.openWhatsApp(clean, message || null);
+      }
+      const textParam = message ? `&text=${encodeURIComponent(message)}` : '';
+      await Linking.openURL(`https://api.whatsapp.com/send?phone=${clean}${textParam}`);
+      return true;
     } catch (error) {
       console.warn('[ContactsService] Error opening WhatsApp:', error);
+      const clean = this.sanitizePhoneNumber(phoneNumber);
+      if (clean) {
+        await Linking.openURL(`https://api.whatsapp.com/send?phone=${clean}`);
+        return true;
+      }
       throw error;
     }
   }
@@ -94,10 +153,40 @@ export class ContactsService {
       if (!clean) {
         throw new Error('Invalid phone number');
       }
-      return await ContactsNativeModule.sendSMS(clean, message || null);
+      if (typeof ContactsNativeModule?.sendSMS === 'function') {
+        return await ContactsNativeModule.sendSMS(clean, message || null);
+      }
+      await Linking.openURL(`sms:${clean}`);
+      return true;
     } catch (error) {
       console.warn('[ContactsService] Error sending SMS:', error);
+      const clean = this.sanitizePhoneNumber(phoneNumber);
+      if (clean) {
+        await Linking.openURL(`sms:${clean}`);
+        return true;
+      }
       throw error;
+    }
+  }
+
+  /**
+   * Open the default system Phone dialer.
+   */
+  static async openDialer(): Promise<boolean> {
+    try {
+      if (typeof ContactsNativeModule?.openDialer === 'function') {
+        return await ContactsNativeModule.openDialer();
+      }
+      await Linking.openURL('tel:');
+      return true;
+    } catch (error) {
+      try {
+        await Linking.openURL('tel:');
+        return true;
+      } catch (linkingError) {
+        console.warn('[ContactsService] Error opening dialer via Linking:', linkingError);
+        throw linkingError;
+      }
     }
   }
 

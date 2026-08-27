@@ -44,16 +44,30 @@ export const restoreAppState = createAsyncThunk(
       dispatch(setLoading(true));
       const persisted = loadAllPersistedData();
 
-      if (persisted.parent) {
+      // Only purge specific legacy mock entries if any remain
+      const legacyMockIds = new Set([
+        'fam-1',
+        'fam-2',
+        'fam-3',
+        'fam-4',
+        'mock-1',
+        'mock-2',
+        'mock-3',
+        'primary-default',
+      ]);
+      const cleanFamily = (persisted.family || []).filter(
+        m => !legacyMockIds.has(m.id),
+      );
+      dispatch(setMembers(cleanFamily));
+
+      if (
+        persisted.parent &&
+        persisted.parent.id !== 'parent-1' &&
+        persisted.parent.name !== 'Grandma Mary'
+      ) {
         dispatch(setParent(persisted.parent));
       } else {
-        dispatch(setParent(MOCK_PARENT));
-      }
-
-      if (persisted.family && persisted.family.length > 0) {
-        dispatch(setMembers(persisted.family));
-      } else {
-        dispatch(setMembers(MOCK_FAMILY_MEMBERS));
+        dispatch(setParent(null));
       }
 
       if (persisted.homeActions && persisted.homeActions.length > 0) {
