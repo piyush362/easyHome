@@ -8,6 +8,7 @@ import {
   AppState,
   StatusBar,
   ActivityIndicator,
+  Alert,
 } from 'react-native';
 import type {NativeStackNavigationProp} from '@react-navigation/native-stack';
 
@@ -31,8 +32,9 @@ export default function LauncherSetupScreen({navigation}: Props) {
       setLoading(true);
       const result = await LauncherModule.isDefaultLauncher();
       setIsDefault(result);
-    } catch (error) {
+    } catch (error: any) {
       console.warn('Failed to check launcher status:', error);
+      Alert.alert('Error', 'Failed to check launcher status: ' + error?.message);
       setIsDefault(false);
     } finally {
       setLoading(false);
@@ -59,9 +61,25 @@ export default function LauncherSetupScreen({navigation}: Props) {
 
   const handleSetDefault = async () => {
     try {
-      await LauncherModule.openDefaultLauncherSettings();
-    } catch (error) {
-      console.warn('Failed to open launcher settings:', error);
+      await LauncherModule.requestSetDefaultLauncher();
+    } catch (error: any) {
+      console.warn('Failed to set default launcher:', error);
+      Alert.alert(
+        'Could not set launcher',
+        'Please go to Settings → Apps → Default Apps → Home App and select EasyHome.\n\nError: ' + error?.message,
+      );
+    }
+  };
+
+  const handleOpenSettings = async () => {
+    try {
+      await LauncherModule.openHomeSettings();
+    } catch (error: any) {
+      console.warn('Failed to open settings:', error);
+      Alert.alert(
+        'Could not open settings',
+        'Please go to Settings → Apps → Default Apps → Home App manually.\n\nError: ' + error?.message,
+      );
     }
   };
 
@@ -129,7 +147,7 @@ export default function LauncherSetupScreen({navigation}: Props) {
 
             <TouchableOpacity
               style={styles.secondaryButton}
-              onPress={handleSetDefault}
+              onPress={handleOpenSettings}
               activeOpacity={0.8}>
               <Text style={styles.secondaryButtonText}>
                 Open Launcher Settings

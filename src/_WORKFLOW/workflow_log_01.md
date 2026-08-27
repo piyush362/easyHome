@@ -98,7 +98,30 @@ Each entry logs what was done, which files were created/modified, and the comple
 - ✅ Allows the user to switch to another launcher
 - ✅ Returns to EasyHome without crashing (stateNotNeeded + singleTask)
 - ✅ Back button does not dismiss the launcher
+- ✅ "Set as Default Launcher" button works (opens chooser dialog)
+- ✅ "Open Launcher Settings" button works (opens system settings)
+
+### Bug Fix Log
+
+#### Fix 1: Kotlin Compilation — Unresolved References (2026-08-27)
+**Problem**: `currentActivity`, `getSystemService`, `startActivity` showed as unresolved references in Kotlin 2.2.
+**Fix**: Changed constructor to `private val reactContext` and accessed `currentActivity` via `reactContext.currentActivity` explicitly.
+**Files**: `LauncherModule.kt`
+
+#### Fix 2: Launcher Buttons Not Working (2026-08-27)
+**Problem**: Both "Set EasyHome as Default Launcher" and "Open Launcher Settings" buttons did nothing on tap.
+**Root Causes**:
+1. `RoleManager.createRequestRoleIntent()` **must** use `startActivityForResult()`, not `startActivity()` — it silently fails otherwise.
+2. Both buttons called the same method — "Open Settings" should go directly to system home settings.
+3. Settings intents used `activity.startActivity()` which fails if `currentActivity` is null.
+
+**Fix**:
+- Split into two methods: `requestSetDefaultLauncher()` (uses `startActivityForResult`) and `openHomeSettings()` (uses `reactContext.startActivity` with `FLAG_ACTIVITY_NEW_TASK`).
+- Added fallback chain: `ACTION_HOME_SETTINGS` → `ACTION_MANAGE_DEFAULT_APPS_SETTINGS` → `ACTION_SETTINGS`.
+- React Native screen shows `Alert.alert()` on errors instead of silently catching.
+**Files**: `LauncherModule.kt`, `LauncherSetupScreen.tsx`
 
 ---
 
 *Next: Phase 2 — Project Architecture & Folder Structure*
+
