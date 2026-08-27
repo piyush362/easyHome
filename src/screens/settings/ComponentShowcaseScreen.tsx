@@ -48,7 +48,17 @@ export default function ComponentShowcaseScreen({
   const [switchVal, setSwitchVal] = useState(true);
   const [btnLoading, setBtnLoading] = useState(false);
 
-  const themes: ColorTheme[] = ['ocean', 'green', 'rose', 'warm', 'blue', 'dark'];
+  const themes: ColorTheme[] = [
+    'warm',
+    'ocean',
+    'green',
+    'rose',
+    'blue',
+    'dark',
+    'midnightBloom',
+    'sunsetWave',
+    'auroraCyan',
+  ];
 
   return (
     <ScreenWrapper

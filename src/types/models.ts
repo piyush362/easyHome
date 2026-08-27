@@ -80,7 +80,10 @@ export type ColorTheme =
   | 'rose'
   | 'warm'
   | 'blue'
-  | 'dark';
+  | 'dark'
+  | 'midnightBloom'
+  | 'sunsetWave'
+  | 'auroraCyan';
 
 export type SizeScale = 'large' | 'extraLarge';
 

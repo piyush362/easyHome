@@ -1,5 +1,5 @@
 import React from 'react';
-import {View, StyleSheet} from 'react-native';
+import {View, StyleSheet, TouchableOpacity, Image} from 'react-native';
 import {
   Palette,
   Sparkles,
@@ -10,7 +10,8 @@ import {
   Moon,
   LayoutGrid,
   Circle,
-  Square,
+  Check,
+  Image as ImageIcon,
 } from 'lucide-react-native';
 import type {RootStackScreenProps} from '../../navigation/types';
 import {
@@ -21,7 +22,7 @@ import {
   setDrawerColumns,
   setDrawerIconShape,
 } from '../../store';
-import {useTheme} from '../../theme';
+import {useTheme, THEME_PRESETS} from '../../theme';
 import {
   ScreenWrapper,
   HeaderNavigation,
@@ -31,25 +32,28 @@ import {
   EHSection,
   EHButton,
 } from '../../components';
-import {ColorTheme, DrawerColumns, IconShape} from '../../types/models';
+import {DrawerColumns, IconShape} from '../../types/models';
 
 export default function SettingsScreen({
   navigation,
 }: RootStackScreenProps<'Settings'>) {
-  const {colors, spacing, themeName, appearance} = useTheme();
+  const {colors, spacing, themeName, appearance, hasWallpaper, isDark, presetInfo} =
+    useTheme();
   const dispatch = useAppDispatch();
   const settings = useAppSelector(state => state.settings.appearance);
 
   const activeColumns: DrawerColumns = settings.drawerColumns || 5;
   const activeShape: IconShape = settings.drawerIconShape || 'circle';
 
-  const themes: ColorTheme[] = ['ocean', 'green', 'rose', 'warm', 'blue', 'dark'];
   const columnOptions: DrawerColumns[] = [3, 4, 5];
   const shapeOptions: {id: IconShape; label: string}[] = [
     {id: 'circle', label: 'Circle'},
     {id: 'rounded', label: 'Rounded'},
     {id: 'square', label: 'Square'},
   ];
+
+  const wallpaperThemes = THEME_PRESETS.filter(p => p.category === 'wallpaper');
+  const solidThemes = THEME_PRESETS.filter(p => p.category === 'solid');
 
   return (
     <ScreenWrapper
@@ -73,16 +77,199 @@ export default function SettingsScreen({
             </View>
             <View style={styles.summaryTextCol}>
               <EHText variant="body" weight="700">
-                Theme: {themeName.toUpperCase()} ({appearance.toUpperCase()})
+                {presetInfo?.label || themeName.toUpperCase()}
               </EHText>
               <EHText variant="caption" color={colors.textSecondary}>
-                App Drawer: {activeColumns} items/row • Shape: {activeShape}
+                Mode: {appearance.toUpperCase()} • {hasWallpaper ? '🖼 Wallpaper Background' : '🎨 Solid Palette'}
+              </EHText>
+              <EHText variant="caption" color={colors.textMuted}>
+                App Drawer: {activeColumns} cols • Shape: {activeShape}
               </EHText>
             </View>
           </View>
         </EHCard>
 
-        {/* 1. App Drawer Customization */}
+        {/* 1. Wallpaper Themes (With Homescreen Background) */}
+        <EHSection
+          title="Wallpaper Themes"
+          subtitle="Artistic preset wallpapers with image-matched color palettes">
+          <View style={styles.themeCardsCol}>
+            {wallpaperThemes.map(preset => {
+              const isSelected = themeName === preset.id;
+              return (
+                <TouchableOpacity
+                  key={preset.id}
+                  activeOpacity={0.8}
+                  onPress={() => dispatch(setTheme(preset.id))}
+                  style={[
+                    styles.themeCardItem,
+                    {
+                      backgroundColor: isSelected
+                        ? isDark
+                          ? 'rgba(56, 189, 248, 0.12)'
+                          : 'rgba(2, 132, 199, 0.08)'
+                        : colors.surface,
+                      borderColor: isSelected ? colors.primary : colors.border,
+                      borderWidth: isSelected ? 2 : 1,
+                      borderRadius: 16,
+                    },
+                  ]}>
+                  {/* Wallpaper Thumbnail */}
+                  <View style={styles.thumbnailBox}>
+                    {preset.wallpaper ? (
+                      <Image
+                        source={preset.wallpaper}
+                        style={styles.thumbnailImg}
+                        resizeMode="cover"
+                      />
+                    ) : (
+                      <ImageIcon size={24} color={colors.primary} />
+                    )}
+                    <View
+                      style={[
+                        styles.wpBadge,
+                        {backgroundColor: isDark ? 'rgba(0,0,0,0.7)' : 'rgba(255,255,255,0.85)'},
+                      ]}>
+                      <EHText variant="caption" weight="700" style={styles.badgeText}>
+                        HD
+                      </EHText>
+                    </View>
+                  </View>
+
+                  {/* Details */}
+                  <View style={styles.themeDetailsCol}>
+                    <View style={styles.titleRow}>
+                      <EHText variant="body" weight="700">
+                        {preset.label}
+                      </EHText>
+                      {isSelected && (
+                        <View
+                          style={[
+                            styles.activeCheckBadge,
+                            {backgroundColor: colors.primary},
+                          ]}>
+                          <Check size={14} color="#FFFFFF" />
+                        </View>
+                      )}
+                    </View>
+
+                    <EHText
+                      variant="caption"
+                      color={colors.textSecondary}
+                      numberOfLines={1}>
+                      {preset.subtitle}
+                    </EHText>
+
+                    {/* Palette preview dots */}
+                    <View style={styles.paletteDotsRow}>
+                      {preset.palettePreview.map((hex, idx) => (
+                        <View
+                          key={idx}
+                          style={[
+                            styles.colorDot,
+                            {backgroundColor: hex, borderColor: colors.border},
+                          ]}
+                        />
+                      ))}
+                    </View>
+                  </View>
+                </TouchableOpacity>
+              );
+            })}
+          </View>
+        </EHSection>
+
+        {/* 2. Solid Color Themes */}
+        <EHSection
+          title="Solid Color Palettes"
+          subtitle="Clean, high-contrast solid backgrounds with vibrant accents">
+          <View style={styles.solidThemesGrid}>
+            {solidThemes.map(preset => {
+              const isSelected = themeName === preset.id;
+              return (
+                <TouchableOpacity
+                  key={preset.id}
+                  activeOpacity={0.8}
+                  onPress={() => dispatch(setTheme(preset.id))}
+                  style={[
+                    styles.solidThemeCard,
+                    {
+                      backgroundColor: isSelected
+                        ? isDark
+                          ? 'rgba(56, 189, 248, 0.12)'
+                          : 'rgba(2, 132, 199, 0.08)'
+                        : colors.surface,
+                      borderColor: isSelected ? colors.primary : colors.border,
+                      borderWidth: isSelected ? 2 : 1,
+                      borderRadius: 14,
+                    },
+                  ]}>
+                  <View style={styles.solidCardTop}>
+                    <EHText variant="body" weight="700">
+                      {preset.label}
+                    </EHText>
+                    {isSelected && (
+                      <View
+                        style={[
+                          styles.activeCheckBadgeSmall,
+                          {backgroundColor: colors.primary},
+                        ]}>
+                        <Check size={12} color="#FFFFFF" />
+                      </View>
+                    )}
+                  </View>
+
+                  <EHText
+                    variant="caption"
+                    color={colors.textSecondary}
+                    numberOfLines={1}
+                    style={styles.solidSubtitle}>
+                    {preset.subtitle}
+                  </EHText>
+
+                  {/* Palette preview dots */}
+                  <View style={styles.paletteDotsRow}>
+                    {preset.palettePreview.map((hex, idx) => (
+                      <View
+                        key={idx}
+                        style={[
+                          styles.colorDotSmall,
+                          {backgroundColor: hex, borderColor: colors.border},
+                        ]}
+                      />
+                    ))}
+                  </View>
+                </TouchableOpacity>
+              );
+            })}
+          </View>
+        </EHSection>
+
+        {/* 3. Appearance Mode */}
+        <EHSection
+          title="Appearance Mode"
+          subtitle="Toggle between light high-contrast and night dark modes">
+          <EHCard style={styles.cardPadding} elevation="low">
+            <View style={styles.btnRow}>
+              <EHButton
+                label="Light Mode"
+                icon={<Sun size={18} color={appearance === 'light' ? '#FFFFFF' : colors.primary} />}
+                variant={appearance === 'light' ? 'primary' : 'outline'}
+                onPress={() => dispatch(setAppearanceMode('light'))}
+                style={styles.flexBtn}
+              />
+              <EHButton
+                label="Dark Mode"
+                icon={<Moon size={18} color={appearance === 'dark' ? '#FFFFFF' : colors.primary} />}
+                variant={appearance === 'dark' ? 'primary' : 'outline'}
+                onPress={() => dispatch(setAppearanceMode('dark'))}
+                style={styles.flexBtn}
+              />
+            </View>
+          </EHCard>
+        </EHSection>
+
+        {/* 4. App Drawer Customization */}
         <EHSection
           title="App Drawer Customization"
           subtitle="Customize grid density and icon shapes for the app list">
@@ -127,49 +314,7 @@ export default function SettingsScreen({
           </EHCard>
         </EHSection>
 
-        {/* 2. Visual Theme & Appearance Mode */}
-        <EHSection
-          title="Color Theme & Appearance"
-          subtitle="Choose high-contrast colors and light or dark mode">
-          <EHCard style={styles.cardPadding} elevation="low">
-            <EHText variant="body" weight="700" style={styles.labelMargin}>
-              Color Palette
-            </EHText>
-            <View style={styles.btnGrid}>
-              {themes.map(t => (
-                <EHButton
-                  key={t}
-                  label={t.toUpperCase()}
-                  variant={themeName === t ? 'primary' : 'outline'}
-                  onPress={() => dispatch(setTheme(t))}
-                  style={styles.themeBtn}
-                />
-              ))}
-            </View>
-
-            <EHText variant="body" weight="700" style={styles.marginTop14}>
-              Appearance Mode
-            </EHText>
-            <View style={styles.btnRow}>
-              <EHButton
-                label="Light Mode"
-                icon={<Sun size={18} color={appearance === 'light' ? '#FFFFFF' : colors.primary} />}
-                variant={appearance === 'light' ? 'primary' : 'outline'}
-                onPress={() => dispatch(setAppearanceMode('light'))}
-                style={styles.flexBtn}
-              />
-              <EHButton
-                label="Dark Mode"
-                icon={<Moon size={18} color={appearance === 'dark' ? '#FFFFFF' : colors.primary} />}
-                variant={appearance === 'dark' ? 'primary' : 'outline'}
-                onPress={() => dispatch(setAppearanceMode('dark'))}
-                style={styles.flexBtn}
-              />
-            </View>
-          </EHCard>
-        </EHSection>
-
-        {/* 3. System & Launcher */}
+        {/* 5. System & Launcher */}
         <EHSection title="System & Launcher">
           <EHListItem
             title="Launcher Setup & Permissions"
@@ -223,6 +368,102 @@ const styles = StyleSheet.create({
   cardPadding: {
     padding: 16,
   },
+  themeCardsCol: {
+    gap: 10,
+  },
+  themeCardItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    padding: 12,
+    gap: 14,
+  },
+  thumbnailBox: {
+    width: 60,
+    height: 72,
+    borderRadius: 10,
+    overflow: 'hidden',
+    position: 'relative',
+    backgroundColor: '#0F172A',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  thumbnailImg: {
+    width: '100%',
+    height: '100%',
+  },
+  wpBadge: {
+    position: 'absolute',
+    bottom: 3,
+    right: 3,
+    paddingHorizontal: 4,
+    paddingVertical: 1,
+    borderRadius: 4,
+  },
+  badgeText: {
+    fontSize: 9,
+    lineHeight: 11,
+  },
+  themeDetailsCol: {
+    flex: 1,
+    gap: 4,
+  },
+  titleRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+  },
+  activeCheckBadge: {
+    width: 22,
+    height: 22,
+    borderRadius: 11,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  activeCheckBadgeSmall: {
+    width: 18,
+    height: 18,
+    borderRadius: 9,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  paletteDotsRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    marginTop: 3,
+  },
+  colorDot: {
+    width: 16,
+    height: 16,
+    borderRadius: 8,
+    borderWidth: 1,
+  },
+  colorDotSmall: {
+    width: 14,
+    height: 14,
+    borderRadius: 7,
+    borderWidth: 1,
+  },
+  solidThemesGrid: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 10,
+  },
+  solidThemeCard: {
+    width: '48%',
+    flexGrow: 1,
+    padding: 12,
+    gap: 4,
+  },
+  solidCardTop: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+  },
+  solidSubtitle: {
+    fontSize: 12,
+    lineHeight: 16,
+  },
   sectionHeaderRow: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -239,15 +480,6 @@ const styles = StyleSheet.create({
   btnRow: {
     flexDirection: 'row',
     gap: 8,
-  },
-  btnGrid: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    gap: 8,
-  },
-  themeBtn: {
-    flexGrow: 1,
-    minWidth: 90,
   },
   flexBtn: {
     flex: 1,

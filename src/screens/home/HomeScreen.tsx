@@ -28,6 +28,7 @@ import {
 } from '../../services';
 import { FamilyMember, Reminder } from '../../types/models';
 import type { RootStackScreenProps } from '../../navigation/types';
+import { WallpaperWrapper } from '../../components';
 import {
   HomeHeader,
   HomeFamilySection,
@@ -297,10 +298,7 @@ export default function HomeScreen({
     try {
       await ContactsService.makeDirectCall(targetNumber);
     } catch (error: any) {
-      Alert.alert(
-        'Emergency Alert',
-        `Calling emergency (${targetNumber})...`,
-      );
+      Alert.alert('Emergency Alert', `Calling emergency (${targetNumber})...`);
     }
   };
 
@@ -308,7 +306,7 @@ export default function HomeScreen({
   const bottomPadding = insets.bottom > 0 ? insets.bottom + 60 : 80;
 
   return (
-    <View style={[styles.container, { backgroundColor: colors.background }]}>
+    <WallpaperWrapper style={styles.container}>
       <StatusBar barStyle={colors.statusBar} />
 
       <ScrollView
@@ -388,7 +386,7 @@ export default function HomeScreen({
 
       {/* Pixel UI App Drawer BottomSheet */}
       <PixelAppDrawer ref={appDrawerRef} />
-    </View>
+    </WallpaperWrapper>
   );
 }
 

@@ -5,7 +5,8 @@ import {Provider} from 'react-redux';
 import {NavigationContainer} from '@react-navigation/native';
 import {store} from '../src/store';
 import {ThemeProvider} from '../src/theme';
-import {HeaderNavigation, ScreenWrapper} from '../src/components';
+import {HeaderNavigation, ScreenWrapper, WallpaperWrapper} from '../src/components';
+import {setTheme} from '../src/store';
 
 describe('HeaderNavigation & ScreenWrapper', () => {
   test('HeaderNavigation renders label and subtitle', () => {
@@ -77,6 +78,46 @@ describe('HeaderNavigation & ScreenWrapper', () => {
     expect(tree).toBeDefined();
     ReactTestRenderer.act(() => {
       tree.unmount();
+    });
+  });
+
+  test('WallpaperWrapper renders with solid and wallpaper theme', () => {
+    // Solid mode
+    store.dispatch(setTheme('warm'));
+    let tree: any;
+    ReactTestRenderer.act(() => {
+      tree = ReactTestRenderer.create(
+        <Provider store={store}>
+          <ThemeProvider>
+            <WallpaperWrapper>
+              <Text>Solid Theme Content</Text>
+            </WallpaperWrapper>
+          </ThemeProvider>
+        </Provider>,
+      );
+    });
+    expect(tree).toBeDefined();
+    ReactTestRenderer.act(() => {
+      tree.unmount();
+    });
+
+    // Wallpaper mode
+    store.dispatch(setTheme('midnightBloom'));
+    let treeWp: any;
+    ReactTestRenderer.act(() => {
+      treeWp = ReactTestRenderer.create(
+        <Provider store={store}>
+          <ThemeProvider>
+            <WallpaperWrapper>
+              <Text>Wallpaper Theme Content</Text>
+            </WallpaperWrapper>
+          </ThemeProvider>
+        </Provider>,
+      );
+    });
+    expect(treeWp).toBeDefined();
+    ReactTestRenderer.act(() => {
+      treeWp.unmount();
     });
   });
 });

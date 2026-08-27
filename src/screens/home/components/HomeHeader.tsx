@@ -15,7 +15,15 @@ export function HomeHeader({
   currentTime,
   currentDate,
 }: HomeHeaderProps) {
-  const {colors, isDark} = useTheme();
+  const {colors, isDark, hasWallpaper} = useTheme();
+
+  const textShadowStyle = hasWallpaper
+    ? {
+        textShadowColor: isDark ? 'rgba(0, 0, 0, 0.75)' : 'rgba(255, 255, 255, 0.8)',
+        textShadowOffset: {width: 0, height: 1},
+        textShadowRadius: 4,
+      }
+    : undefined;
 
   return (
     <View style={styles.topSection}>
@@ -23,16 +31,23 @@ export function HomeHeader({
         <EHText
           variant="caption"
           color={colors.textSecondary}
-          style={styles.greetingText}>
+          style={[styles.greetingText, textShadowStyle]}>
           Welcome, {parentName}
         </EHText>
       ) : null}
 
-      <EHText variant="heading1" weight="800" style={styles.clockText}>
+      <EHText
+        variant="heading1"
+        weight="800"
+        style={[styles.clockText, textShadowStyle]}>
         {currentTime}
       </EHText>
 
-      <EHText variant="body" color={colors.textSecondary} weight="500">
+      <EHText
+        variant="body"
+        color={colors.textSecondary}
+        weight="500"
+        style={textShadowStyle}>
         {currentDate}
       </EHText>
 

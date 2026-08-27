@@ -52,9 +52,18 @@ describe('Redux Store & Slices', () => {
     expect(store.getState().family.members.length).toBe(0);
   });
 
-  test('Settings Slice updates correctly', () => {
+  test('Settings Slice updates correctly for solid and wallpaper themes', () => {
     store.dispatch(setTheme('ocean'));
     expect(store.getState().settings.appearance.theme).toBe('ocean');
+
+    store.dispatch(setTheme('midnightBloom'));
+    expect(store.getState().settings.appearance.theme).toBe('midnightBloom');
+
+    store.dispatch(setTheme('sunsetWave'));
+    expect(store.getState().settings.appearance.theme).toBe('sunsetWave');
+
+    store.dispatch(setTheme('auroraCyan'));
+    expect(store.getState().settings.appearance.theme).toBe('auroraCyan');
 
     store.dispatch(setTextSize('extraLarge'));
     expect(store.getState().settings.appearance.textSize).toBe('extraLarge');

@@ -80,6 +80,15 @@ export interface ElevationScale {
   high: ElevationShadow;
 }
 
+export interface ThemePresetInfo {
+  id: ColorTheme;
+  label: string;
+  subtitle: string;
+  category: 'wallpaper' | 'solid';
+  wallpaper: any | null;
+  palettePreview: string[];
+}
+
 export interface ThemeContextValue {
   themeName: ColorTheme;
   appearance: 'light' | 'dark';
@@ -93,4 +102,7 @@ export interface ThemeContextValue {
   dimensions: DimensionTokens;
   elevation: ElevationScale;
   isDark: boolean;
+  wallpaper: any | null;
+  hasWallpaper: boolean;
+  presetInfo: ThemePresetInfo;
 }

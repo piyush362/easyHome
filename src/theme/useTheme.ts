@@ -3,6 +3,7 @@ import {ThemeContext} from './ThemeProvider';
 import {ThemeContextValue} from './types';
 import {
   THEME_PALETTES,
+  THEME_PRESETS,
   TYPOGRAPHY_TOKENS,
   SPACING_TOKENS,
   BORDER_RADIUS_TOKENS,
@@ -24,6 +25,9 @@ const fallbackTheme: ThemeContextValue = {
   dimensions: DIMENSION_TOKENS.large,
   elevation: ELEVATION_TOKENS,
   isDark: false,
+  wallpaper: null,
+  hasWallpaper: false,
+  presetInfo: THEME_PRESETS[3],
 };
 
 /**

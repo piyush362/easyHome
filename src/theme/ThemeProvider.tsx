@@ -1,8 +1,10 @@
 import React, {createContext, useMemo} from 'react';
-import {useAppSelector} from '../store';
+import {useAppSelector} from '../store/hooks';
 import {ThemeContextValue} from './types';
 import {
   THEME_PALETTES,
+  THEME_WALLPAPERS,
+  THEME_PRESETS,
   TYPOGRAPHY_TOKENS,
   SPACING_TOKENS,
   BORDER_RADIUS_TOKENS,
@@ -18,7 +20,7 @@ export interface ThemeProviderProps {
 
 export function ThemeProvider({children}: ThemeProviderProps) {
   const appearanceSettings = useAppSelector(
-    state => state.settings.appearance,
+    state => state?.settings?.appearance,
   );
 
   const themeValue = useMemo<ThemeContextValue>(() => {
@@ -28,9 +30,14 @@ export function ThemeProvider({children}: ThemeProviderProps) {
     const iconSize = appearanceSettings?.iconSize || 'large';
     const buttonSize = appearanceSettings?.buttonSize || 'large';
 
-    const colors = THEME_PALETTES[themeName][appearance];
-    const typography = TYPOGRAPHY_TOKENS[textSize];
-    const dimensions = DIMENSION_TOKENS[buttonSize];
+    const colors = THEME_PALETTES[themeName]
+      ? THEME_PALETTES[themeName][appearance]
+      : THEME_PALETTES.warm[appearance];
+    const typography = TYPOGRAPHY_TOKENS[textSize] || TYPOGRAPHY_TOKENS.large;
+    const dimensions = DIMENSION_TOKENS[buttonSize] || DIMENSION_TOKENS.large;
+    const wallpaper = THEME_WALLPAPERS[themeName] || null;
+    const presetInfo =
+      THEME_PRESETS.find(p => p.id === themeName) || THEME_PRESETS[0];
 
     return {
       themeName,
@@ -45,6 +52,9 @@ export function ThemeProvider({children}: ThemeProviderProps) {
       dimensions,
       elevation: ELEVATION_TOKENS,
       isDark: appearance === 'dark',
+      wallpaper,
+      hasWallpaper: Boolean(wallpaper),
+      presetInfo,
     };
   }, [appearanceSettings]);
 
