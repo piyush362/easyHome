@@ -180,11 +180,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
     paddingBottom: 14,
     zIndex: 10,
-    elevation: 4,
-    shadowColor: '#000',
-    shadowOffset: {width: 0, height: 3},
-    shadowOpacity: 0.08,
-    shadowRadius: 6,
+    boxShadow: '0px 3px 8px rgba(0, 0, 0, 0.08)',
   },
   headerContentRow: {
     minHeight: 48,

@@ -172,4 +172,12 @@ describe('Design System Components', () => {
       tree.unmount();
     });
   });
+
+  test('ELEVATION_TOKENS use modern CSS boxShadow tokens', () => {
+    const {ELEVATION_TOKENS} = require('../src/theme/tokens');
+    expect(ELEVATION_TOKENS.low.boxShadow).toBeDefined();
+    expect(ELEVATION_TOKENS.medium.boxShadow).toBeDefined();
+    expect(ELEVATION_TOKENS.high.boxShadow).toBeDefined();
+    expect(ELEVATION_TOKENS.low.boxShadow).toContain('rgba');
+  });
 });

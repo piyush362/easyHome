@@ -648,36 +648,18 @@ export const DIMENSION_TOKENS: Record<SizeScale, DimensionTokens> = {
 };
 
 // ==========================================
-// 6. Elevation & Shadow Scales
+// 6. Elevation & Shadow Scales (Modern CSS boxShadow)
 // ==========================================
 
 export const ELEVATION_TOKENS: ElevationScale = {
-  none: {
-    shadowColor: 'transparent',
-    shadowOffset: {width: 0, height: 0},
-    shadowOpacity: 0,
-    shadowRadius: 0,
-    elevation: 0,
-  },
+  none: {},
   low: {
-    shadowColor: '#000000',
-    shadowOffset: {width: 0, height: 2},
-    shadowOpacity: 0.08,
-    shadowRadius: 4,
-    elevation: 2,
+    boxShadow: '0px 2px 6px rgba(0, 0, 0, 0.08)',
   },
   medium: {
-    shadowColor: '#000000',
-    shadowOffset: {width: 0, height: 4},
-    shadowOpacity: 0.12,
-    shadowRadius: 8,
-    elevation: 4,
+    boxShadow: '0px 4px 12px rgba(0, 0, 0, 0.12)',
   },
   high: {
-    shadowColor: '#000000',
-    shadowOffset: {width: 0, height: 8},
-    shadowOpacity: 0.16,
-    shadowRadius: 16,
-    elevation: 8,
+    boxShadow: '0px 8px 24px rgba(0, 0, 0, 0.18)',
   },
 };

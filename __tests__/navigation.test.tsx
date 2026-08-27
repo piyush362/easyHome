@@ -78,6 +78,13 @@ describe('Navigation Architecture', () => {
     let familyTree: any;
     let appsTree: any;
     let settingsTree: any;
+    let themeSettingsTree: any;
+    let appDrawerSettingsTree: any;
+
+    const {
+      ThemeSettingsScreen,
+      AppDrawerSettingsScreen,
+    } = require('../src/screens/settings');
 
     ReactTestRenderer.act(() => {
       familyTree = ReactTestRenderer.create(
@@ -107,16 +114,38 @@ describe('Navigation Architecture', () => {
           </ThemeProvider>
         </Provider>,
       );
+      themeSettingsTree = ReactTestRenderer.create(
+        <Provider store={store}>
+          <ThemeProvider>
+            <NavigationContainer>
+              <ThemeSettingsScreen navigation={mockNav} route={{} as any} />
+            </NavigationContainer>
+          </ThemeProvider>
+        </Provider>,
+      );
+      appDrawerSettingsTree = ReactTestRenderer.create(
+        <Provider store={store}>
+          <ThemeProvider>
+            <NavigationContainer>
+              <AppDrawerSettingsScreen navigation={mockNav} route={{} as any} />
+            </NavigationContainer>
+          </ThemeProvider>
+        </Provider>,
+      );
     });
 
     expect(familyTree).toBeDefined();
     expect(appsTree).toBeDefined();
     expect(settingsTree).toBeDefined();
+    expect(themeSettingsTree).toBeDefined();
+    expect(appDrawerSettingsTree).toBeDefined();
 
     ReactTestRenderer.act(() => {
       familyTree.unmount();
       appsTree.unmount();
       settingsTree.unmount();
+      themeSettingsTree.unmount();
+      appDrawerSettingsTree.unmount();
     });
   });
 

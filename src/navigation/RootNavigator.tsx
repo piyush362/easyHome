@@ -8,6 +8,8 @@ import {
   FamilyScreen,
   AppsScreen,
   SettingsScreen,
+  ThemeSettingsScreen,
+  AppDrawerSettingsScreen,
   ComponentShowcaseScreen,
 } from '../screens';
 import FamilySetupNavigator from './FamilySetupNavigator';
@@ -46,6 +48,16 @@ export default function RootNavigator() {
       <Stack.Screen
         name="Settings"
         component={SettingsScreen}
+        options={{animation: 'slide_from_right'}}
+      />
+      <Stack.Screen
+        name="ThemeSettings"
+        component={ThemeSettingsScreen}
+        options={{animation: 'slide_from_right'}}
+      />
+      <Stack.Screen
+        name="AppDrawerSettings"
+        component={AppDrawerSettingsScreen}
         options={{animation: 'slide_from_right'}}
       />
       <Stack.Screen

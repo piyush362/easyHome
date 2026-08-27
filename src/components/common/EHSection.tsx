@@ -86,5 +86,6 @@ const styles = StyleSheet.create({
   },
   content: {
     width: '100%',
+    gap: 12,
   },
 });

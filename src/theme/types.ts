@@ -65,19 +65,15 @@ export interface DimensionTokens {
   minTouchTarget: number;
 }
 
-export interface ElevationShadow {
-  shadowColor: string;
-  shadowOffset: {width: number; height: number};
-  shadowOpacity: number;
-  shadowRadius: number;
-  elevation: number;
+export interface BoxShadowStyle {
+  boxShadow?: string;
 }
 
 export interface ElevationScale {
-  none: ElevationShadow;
-  low: ElevationShadow;
-  medium: ElevationShadow;
-  high: ElevationShadow;
+  none: BoxShadowStyle;
+  low: BoxShadowStyle;
+  medium: BoxShadowStyle;
+  high: BoxShadowStyle;
 }
 
 export interface ThemePresetInfo {
