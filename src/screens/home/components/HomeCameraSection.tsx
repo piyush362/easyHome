@@ -2,7 +2,7 @@ import React from 'react';
 import {View, StyleSheet} from 'react-native';
 import {Camera, User, Video} from 'lucide-react-native';
 import {useTheme} from '../../../theme';
-import {EHIconButton, EHSection} from '../../../components';
+import {EHText, EHCard, EHIconButton} from '../../../components';
 
 export interface HomeCameraSectionProps {
   onCameraAction: (mode: 'Photo' | 'Selfie' | 'Video') => void;
@@ -12,7 +12,15 @@ export function HomeCameraSection({onCameraAction}: HomeCameraSectionProps) {
   const {colors} = useTheme();
 
   return (
-    <EHSection title="Camera & Photos">
+    <EHCard style={styles.frostedContainer} elevation="low">
+      {/* Frosted Container Header */}
+      <View style={styles.headerRow}>
+        <EHText variant="heading2" weight="700">
+          Camera & Photos
+        </EHText>
+      </View>
+
+      {/* 3-Button Grid */}
       <View style={styles.grid3}>
         <EHIconButton
           icon={<Camera size={28} color={colors.primary} />}
@@ -36,11 +44,20 @@ export function HomeCameraSection({onCameraAction}: HomeCameraSectionProps) {
           style={styles.grid3Item}
         />
       </View>
-    </EHSection>
+    </EHCard>
   );
 }
 
 const styles = StyleSheet.create({
+  frostedContainer: {
+    padding: 16,
+    borderRadius: 20,
+    marginVertical: 6,
+  },
+  headerRow: {
+    marginBottom: 12,
+    paddingHorizontal: 2,
+  },
   grid3: {
     flexDirection: 'row',
     gap: 8,

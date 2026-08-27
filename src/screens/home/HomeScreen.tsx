@@ -302,12 +302,14 @@ export default function HomeScreen({
     }
   };
 
-  const topPadding = insets.top > 0 ? insets.top + 10 : 28;
   const bottomPadding = insets.bottom > 0 ? insets.bottom + 60 : 80;
 
   return (
     <WallpaperWrapper style={styles.container}>
       <StatusBar barStyle={colors.statusBar} />
+
+      {/* to keep statusbar area uncovered */}
+      <View style={{ height: insets.top }} />
 
       <ScrollView
         ref={scrollViewRef}
@@ -315,7 +317,7 @@ export default function HomeScreen({
           styles.scrollContent,
           {
             paddingHorizontal: spacing.md,
-            paddingTop: topPadding,
+            paddingTop: 10,
             paddingBottom: bottomPadding,
           },
         ]}
@@ -394,5 +396,7 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
   },
-  scrollContent: {},
+  scrollContent: {
+    gap: 12,
+  },
 });

@@ -8,6 +8,7 @@ import {
   DimensionTokens,
   ElevationScale,
 } from './types';
+import {IMAGES} from '../assets';
 
 // ==========================================
 // 1. Wallpaper Background Assets
@@ -20,9 +21,9 @@ export const THEME_WALLPAPERS: Record<ColorTheme, any | null> = {
   warm: null,
   blue: null,
   dark: null,
-  midnightBloom: require('../assets/images/theme/theme-1.jpg'),
-  sunsetWave: require('../assets/images/theme/theme-2.jpg'),
-  auroraCyan: require('../assets/images/theme/theme-2.jpg'),
+  midnightBloom: IMAGES.wallpapers.midnightBloom,
+  sunsetWave: IMAGES.wallpapers.sunsetWave,
+  auroraCyan: IMAGES.wallpapers.auroraCyan,
 };
 
 // ==========================================

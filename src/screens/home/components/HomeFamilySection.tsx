@@ -1,8 +1,8 @@
 import React from 'react';
 import {View, ScrollView, StyleSheet, TouchableOpacity} from 'react-native';
-import {Star, UserPlus, Plus} from 'lucide-react-native';
+import {Star, UserPlus, Plus, ChevronRight} from 'lucide-react-native';
 import {useTheme} from '../../../theme';
-import {EHText, EHCard, EHAvatar, EHSection, EHButton} from '../../../components';
+import {EHText, EHCard, EHAvatar, EHButton} from '../../../components';
 import {FamilyMember} from '../../../types/models';
 
 export interface HomeFamilySectionProps {
@@ -19,62 +19,79 @@ export function HomeFamilySection({
   const {colors, borderRadius} = useTheme();
 
   return (
-    <EHSection
-      title="Family & Loved Ones"
-      subtitle={
-        familyMembers.length > 0
-          ? 'Tap any photo to call or message'
-          : 'Keep your important contacts 1 tap away'
-      }
-      action={{
-        label: familyMembers.length > 0 ? 'See All →' : '+ Add',
-        onPress: onSeeAll,
-      }}>
+    <EHCard style={styles.frostedContainer} elevation="low">
+      {/* Frosted Container Header */}
+      <View style={styles.headerRow}>
+        <EHText variant="heading2" weight="700">
+          Family Contacts
+        </EHText>
+        <TouchableOpacity
+          onPress={onSeeAll}
+          activeOpacity={0.7}
+          style={styles.actionLink}
+          accessibilityRole="button">
+          <EHText variant="body" color={colors.primary} weight="600">
+            {familyMembers.length > 0 ? 'See All' : '+ Add'}
+          </EHText>
+          {familyMembers.length > 0 && (
+            <ChevronRight size={18} color={colors.primary} />
+          )}
+        </TouchableOpacity>
+      </View>
+
+      {/* Content */}
       {familyMembers.length === 0 ? (
-        <EHCard style={styles.emptyCard} elevation="low">
+        <View style={styles.emptyContainer}>
           <View
             style={[
               styles.emptyIconCircle,
               {backgroundColor: colors.primaryLight},
             ]}>
-            <UserPlus size={28} color={colors.primary} />
+            <UserPlus size={26} color={colors.primary} />
           </View>
           <View style={styles.emptyTextCol}>
             <EHText variant="body" weight="700">
-              No loved ones added yet
+              No family members added
             </EHText>
             <EHText variant="caption" color={colors.textSecondary}>
-              Add family members for quick 1-tap calls & messaging
+              Add loved ones for quick 1-tap dial
             </EHText>
           </View>
           <EHButton
-            label="Add Now"
+            label="Add"
             icon={<Plus size={16} color="#FFFFFF" />}
             variant="primary"
             onPress={onSeeAll}
             style={styles.emptyAddBtn}
           />
-        </EHCard>
+        </View>
       ) : (
         <ScrollView
           horizontal
           showsHorizontalScrollIndicator={false}
           contentContainerStyle={styles.familyScroll}>
           {familyMembers.map((member, index) => (
-            <EHCard
+            <TouchableOpacity
               key={member.id}
-              style={styles.familyCard}
+              activeOpacity={0.8}
               onPress={() => onSelectMember(member)}
-              elevation="medium">
+              style={[
+                styles.familyCard,
+                {
+                  backgroundColor: colors.surface,
+                  borderColor: colors.border,
+                  borderRadius: borderRadius.md,
+                },
+              ]}>
               <View style={styles.avatarWrapper}>
-                <EHAvatar source={member.photo} name={member.name} size={64} />
+                <EHAvatar source={member.photo} name={member.name} size={58} />
                 {index === 0 && (
                   <View
                     style={[
                       styles.starBadge,
                       {backgroundColor: colors.primary},
                     ]}>
-                    <Star size={11} color="#FFFFFF" fill="#FFFFFF" />
+                    <Star size={10} color="#FFFFFF" fill="#FFFFFF" />
                   </View>
                 )}
               </View>
@@ -93,7 +110,7 @@ export function HomeFamilySection({
                 numberOfLines={1}>
                 {member.relationship}
               </EHText>
-            </EHCard>
+            </TouchableOpacity>
           ))}
 
           {/* Add more card at the end of horizontal list */}
@@ -115,40 +132,58 @@ export function HomeFamilySection({
                 styles.addMoreIconCircle,
                 {backgroundColor: colors.primaryLight},
               ]}>
-              <Plus size={24} color={colors.primary} />
+              <Plus size={22} color={colors.primary} />
             </View>
             <EHText variant="caption" weight="700" style={styles.addMoreText}>
-              Add Loved One
+              Add
             </EHText>
           </TouchableOpacity>
         </ScrollView>
       )}
-    </EHSection>
+    </EHCard>
   );
 }
 
 const styles = StyleSheet.create({
+  frostedContainer: {
+    padding: 16,
+    borderRadius: 20,
+    marginVertical: 6,
+  },
+  headerRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 12,
+    paddingHorizontal: 2,
+  },
+  actionLink: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 2,
+  },
   familyScroll: {
-    paddingVertical: 4,
-    gap: 12,
+    paddingVertical: 2,
+    gap: 10,
   },
   familyCard: {
-    width: 120,
+    width: 110,
     alignItems: 'center',
-    paddingVertical: 14,
+    paddingVertical: 12,
     paddingHorizontal: 8,
+    borderWidth: 1,
   },
   avatarWrapper: {
     position: 'relative',
-    marginBottom: 8,
+    marginBottom: 6,
   },
   starBadge: {
     position: 'absolute',
     bottom: -2,
     right: -2,
-    width: 20,
-    height: 20,
-    borderRadius: 10,
+    width: 18,
+    height: 18,
+    borderRadius: 9,
     justifyContent: 'center',
     alignItems: 'center',
   },
@@ -156,15 +191,15 @@ const styles = StyleSheet.create({
     marginTop: 2,
     textAlign: 'center',
   },
-  emptyCard: {
+  emptyContainer: {
     flexDirection: 'row',
     alignItems: 'center',
-    padding: 16,
+    paddingVertical: 8,
   },
   emptyIconCircle: {
-    width: 48,
-    height: 48,
-    borderRadius: 24,
+    width: 44,
+    height: 44,
+    borderRadius: 22,
     justifyContent: 'center',
     alignItems: 'center',
     marginRight: 12,
@@ -174,22 +209,22 @@ const styles = StyleSheet.create({
     marginRight: 8,
   },
   emptyAddBtn: {
-    minHeight: 40,
+    minHeight: 38,
     paddingHorizontal: 14,
   },
   addMoreCard: {
-    width: 100,
+    width: 90,
     alignItems: 'center',
     justifyContent: 'center',
-    paddingVertical: 14,
+    paddingVertical: 12,
     paddingHorizontal: 8,
     borderWidth: 1,
     borderStyle: 'dashed',
   },
   addMoreIconCircle: {
-    width: 44,
-    height: 44,
-    borderRadius: 22,
+    width: 40,
+    height: 40,
+    borderRadius: 20,
     justifyContent: 'center',
     alignItems: 'center',
     marginBottom: 6,

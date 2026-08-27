@@ -2,7 +2,7 @@ import React from 'react';
 import {View, TouchableOpacity, StyleSheet} from 'react-native';
 import {LayoutGrid, Settings} from 'lucide-react-native';
 import {useTheme} from '../../../theme';
-import {EHText} from '../../../components';
+import {EHText, EHCard} from '../../../components';
 
 export interface HomeBottomBarProps {
   onOpenDrawer: () => void;
@@ -16,75 +16,76 @@ export function HomeBottomBar({
   const {colors, borderRadius} = useTheme();
 
   return (
-    <View style={styles.bottomBar}>
-      <TouchableOpacity
-        style={[
-          styles.bottomBarBtn,
-          {
-            backgroundColor: colors.surface,
-            borderColor: colors.border,
-            borderRadius: borderRadius.lg,
-          },
-        ]}
-        onPress={onOpenDrawer}
-        activeOpacity={0.75}
-        accessibilityRole="button"
-        accessibilityLabel="All Apps">
-        <LayoutGrid
-          size={28}
-          color={colors.primary}
-          style={styles.bottomBarIcon}
-        />
-        <EHText variant="body" weight="700">
-          All Apps
-        </EHText>
-        <EHText variant="caption" color={colors.textSecondary}>
-          Swipe up or tap
-        </EHText>
-      </TouchableOpacity>
+    <EHCard style={styles.frostedContainer} elevation="low">
+      <View style={styles.bottomBarRow}>
+        <TouchableOpacity
+          style={[
+            styles.bottomBarBtn,
+            {
+              backgroundColor: colors.surface,
+              borderColor: colors.border,
+              borderRadius: borderRadius.md,
+            },
+          ]}
+          onPress={onOpenDrawer}
+          activeOpacity={0.75}
+          accessibilityRole="button"
+          accessibilityLabel="All Apps">
+          <LayoutGrid
+            size={28}
+            color={colors.primary}
+            style={styles.bottomBarIcon}
+          />
+          <EHText variant="body" weight="700">
+            All Apps
+          </EHText>
+        </TouchableOpacity>
 
-      <TouchableOpacity
-        style={[
-          styles.bottomBarBtn,
-          {
-            backgroundColor: colors.surface,
-            borderColor: colors.border,
-            borderRadius: borderRadius.lg,
-          },
-        ]}
-        onPress={onOpenSettings}
-        activeOpacity={0.75}
-        accessibilityRole="button"
-        accessibilityLabel="Settings">
-        <Settings
-          size={28}
-          color={colors.primary}
-          style={styles.bottomBarIcon}
-        />
-        <EHText variant="body" weight="700">
-          Settings
-        </EHText>
-        <EHText variant="caption" color={colors.textSecondary}>
-          Theme & layout
-        </EHText>
-      </TouchableOpacity>
-    </View>
+        <TouchableOpacity
+          style={[
+            styles.bottomBarBtn,
+            {
+              backgroundColor: colors.surface,
+              borderColor: colors.border,
+              borderRadius: borderRadius.md,
+            },
+          ]}
+          onPress={onOpenSettings}
+          activeOpacity={0.75}
+          accessibilityRole="button"
+          accessibilityLabel="Settings">
+          <Settings
+            size={28}
+            color={colors.primary}
+            style={styles.bottomBarIcon}
+          />
+          <EHText variant="body" weight="700">
+            Settings
+          </EHText>
+        </TouchableOpacity>
+      </View>
+    </EHCard>
   );
 }
 
 const styles = StyleSheet.create({
-  bottomBar: {
+  frostedContainer: {
+    padding: 12,
+    borderRadius: 20,
+    marginVertical: 6,
+  },
+  bottomBarRow: {
     flexDirection: 'row',
     gap: 12,
-    marginTop: 16,
   },
   bottomBarBtn: {
     flex: 1,
     alignItems: 'center',
     justifyContent: 'center',
-    paddingVertical: 16,
+    paddingVertical: 14,
     paddingHorizontal: 8,
     borderWidth: 1,
+    minHeight: 80,
   },
   bottomBarIcon: {
     marginBottom: 6,
