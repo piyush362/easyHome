@@ -204,3 +204,22 @@ jest.mock('@gorhom/bottom-sheet', () => {
     }),
   };
 });
+
+// Mock react-native-device-info
+jest.mock('react-native-device-info', () => ({
+  getBatteryLevel: jest.fn().mockResolvedValue(0.85),
+  getBatteryLevelSync: jest.fn().mockReturnValue(0.85),
+  isBatteryCharging: jest.fn().mockResolvedValue(false),
+  isBatteryChargingSync: jest.fn().mockReturnValue(false),
+  getVersion: jest.fn().mockReturnValue('1.0.0'),
+  getBuildNumber: jest.fn().mockReturnValue('1'),
+}));
+
+// Mock react-native-swiper
+jest.mock('react-native-swiper', () => {
+  const React = require('react');
+  const {View} = require('react-native');
+  return ({children, ...props}: any) =>
+    React.createElement(View, props, children);
+});
+

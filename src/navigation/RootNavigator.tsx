@@ -4,7 +4,7 @@ import type {RootStackParamList} from './types';
 import {useAppSelector} from '../store';
 import {
   LauncherSetupScreen,
-  HomeScreen,
+  HomeScreenV2,
   FamilyScreen,
   AppsScreen,
   SettingsScreen,
@@ -40,7 +40,7 @@ export default function RootNavigator() {
         animationDuration: 200,
       }}>
       <Stack.Screen name="LauncherSetup" component={LauncherSetupScreen} />
-      <Stack.Screen name="Home" component={HomeScreen} />
+      <Stack.Screen name="Home" component={HomeScreenV2} />
       <Stack.Screen
         name="Family"
         component={FamilyScreen}
