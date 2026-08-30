@@ -37,6 +37,7 @@ export default function RootNavigator() {
       screenOptions={{
         headerShown: false,
         animation: 'fade',
+        animationDuration: 200,
       }}>
       <Stack.Screen name="LauncherSetup" component={LauncherSetupScreen} />
       <Stack.Screen name="Home" component={HomeScreen} />

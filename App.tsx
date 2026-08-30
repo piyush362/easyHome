@@ -19,7 +19,8 @@ LogBox.ignoreLogs([
 
 import {store, restoreAppState, fetchInstalledApps, useAppDispatch} from './src/store';
 import {ThemeProvider, useTheme} from './src/theme';
-import {RootNavigator} from './src/navigation';
+import {RootNavigator, navigationRef, navigateToHomeScreen} from './src/navigation';
+import {LauncherService} from './src/services';
 
 function AppContent() {
   const {colors} = useTheme();
@@ -29,6 +30,15 @@ function AppContent() {
     // Restore persistent store and prefetch installed apps in background on app startup
     dispatch(restoreAppState());
     dispatch(fetchInstalledApps(false));
+
+    // Listen for system Home button / gesture press and return to Home screen
+    const unsubscribeHome = LauncherService.addHomeButtonPressedListener(() => {
+      navigateToHomeScreen();
+    });
+
+    return () => {
+      unsubscribeHome();
+    };
   }, [dispatch]);
 
   return (
@@ -36,7 +46,7 @@ function AppContent() {
       <SafeAreaProvider>
         <BottomSheetModalProvider>
           <StatusBar barStyle={colors.statusBar} />
-          <NavigationContainer>
+          <NavigationContainer ref={navigationRef}>
             <RootNavigator />
           </NavigationContainer>
         </BottomSheetModalProvider>

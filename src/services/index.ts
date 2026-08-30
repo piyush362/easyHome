@@ -6,3 +6,5 @@ export * from './GalleryService';
 export * from './TorchService';
 export * from './ImageCompressorService';
 export * from './ReminderService';
+export * from './LauncherService';
+

@@ -13,6 +13,7 @@ import {
   BackHandler,
   Alert,
   Linking,
+  Keyboard,
 } from 'react-native';
 import { useFocusEffect } from '@react-navigation/native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -26,6 +27,7 @@ import {
   TorchService,
   AppsService,
   ReminderService,
+  LauncherService,
 } from '../../services';
 import { FamilyMember, Reminder } from '../../types/models';
 import type { RootStackScreenProps } from '../../navigation/types';
@@ -112,6 +114,23 @@ export default function HomeScreen({
       .catch(() => {});
     return () => clearInterval(interval);
   }, [updateTime]);
+
+  // Handle Home button / gesture when on Home screen (dismiss sheets/modals & scroll to top)
+  useEffect(() => {
+    const unsubscribe = LauncherService.addHomeButtonPressedListener(() => {
+      if (appDrawerRef.current?.isOpen()) {
+        appDrawerRef.current.close();
+      }
+      setSelectedFamilyMember(null);
+      setSosModalVisible(false);
+      Keyboard.dismiss();
+      scrollViewRef.current?.scrollTo({ y: 0, animated: true });
+    });
+
+    return () => {
+      unsubscribe();
+    };
+  }, []);
 
   // Primary emergency contact (null if no family added yet)
   const primaryContact: FamilyMember | null = useMemo(() => {

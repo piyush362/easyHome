@@ -183,4 +183,53 @@ describe('Navigation Architecture', () => {
       completeTree.unmount();
     });
   });
+
+  test('LauncherService registers and cleans up home button listeners', () => {
+    const {LauncherService, EVENT_HOME_PRESSED} = require('../src/services/LauncherService');
+    const {DeviceEventEmitter} = require('react-native');
+
+    const mockCallback = jest.fn();
+    const unsubscribe = LauncherService.addHomeButtonPressedListener(mockCallback);
+
+    DeviceEventEmitter.emit(EVENT_HOME_PRESSED);
+    expect(mockCallback).toHaveBeenCalledTimes(1);
+
+    unsubscribe();
+    DeviceEventEmitter.emit(EVENT_HOME_PRESSED);
+    expect(mockCallback).toHaveBeenCalledTimes(1);
+  });
+
+  test('navigateToHomeScreen helper navigates to Home when not on Home', () => {
+    const {navigationRef, navigateToHomeScreen} = require('../src/navigation/navigationRef');
+
+    // When navigationRef is not ready
+    expect(navigateToHomeScreen()).toBe(false);
+
+    // Mock navigationRef methods
+    const mockNavigate = jest.fn();
+    const mockDispatch = jest.fn();
+    const mockIsReady = jest.fn().mockReturnValue(true);
+    const mockGetCurrentRoute = jest.fn();
+
+    (navigationRef as any).isReady = mockIsReady;
+    (navigationRef as any).navigate = mockNavigate;
+    (navigationRef as any).dispatch = mockDispatch;
+    (navigationRef as any).getCurrentRoute = mockGetCurrentRoute;
+
+    // When already on 'Home' screen -> does not navigate
+    mockGetCurrentRoute.mockReturnValue({name: 'Home', key: 'home-1'});
+    expect(navigateToHomeScreen()).toBe(false);
+    expect(mockNavigate).not.toHaveBeenCalled();
+
+    // When on 'Settings' screen -> navigates to 'Home'
+    mockGetCurrentRoute.mockReturnValue({name: 'Settings', key: 'settings-1'});
+    expect(navigateToHomeScreen()).toBe(true);
+    expect(mockNavigate).toHaveBeenCalledWith('Home');
+
+    // When on 'Apps' screen -> navigates to 'Home'
+    mockNavigate.mockClear();
+    mockGetCurrentRoute.mockReturnValue({name: 'Apps', key: 'apps-1'});
+    expect(navigateToHomeScreen()).toBe(true);
+    expect(mockNavigate).toHaveBeenCalledWith('Home');
+  });
 });

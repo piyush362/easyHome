@@ -11,6 +11,7 @@ import com.facebook.react.bridge.Promise
 import com.facebook.react.bridge.ReactApplicationContext
 import com.facebook.react.bridge.ReactContextBaseJavaModule
 import com.facebook.react.bridge.ReactMethod
+import com.facebook.react.modules.core.DeviceEventManagerModule
 
 class LauncherModule(private val reactContext: ReactApplicationContext) :
     ReactContextBaseJavaModule(reactContext) {
@@ -18,9 +19,56 @@ class LauncherModule(private val reactContext: ReactApplicationContext) :
     companion object {
         private const val TAG = "LauncherModule"
         private const val REQUEST_CODE_SET_DEFAULT = 1001
+        const val EVENT_ON_HOME_PRESSED = "EasyHome_onHomeButtonPressed"
+
+        private var instance: LauncherModule? = null
+
+        /**
+         * Called by MainActivity when a Home button/gesture intent is received.
+         */
+        fun onHomeButtonPressed() {
+            instance?.emitHomeButtonPressed()
+        }
     }
 
     override fun getName(): String = "LauncherModule"
+
+    override fun initialize() {
+        super.initialize()
+        instance = this
+    }
+
+    override fun invalidate() {
+        super.invalidate()
+        if (instance == this) {
+            instance = null
+        }
+    }
+
+    /**
+     * Emits the home button pressed event to React Native JavaScript.
+     */
+    private fun emitHomeButtonPressed() {
+        try {
+            if (reactContext.hasActiveReactInstance()) {
+                reactContext
+                    .getJSModule(DeviceEventManagerModule.RCTDeviceEventEmitter::class.java)
+                    ?.emit(EVENT_ON_HOME_PRESSED, null)
+            }
+        } catch (e: Exception) {
+            Log.e(TAG, "Failed to emit home pressed event", e)
+        }
+    }
+
+    @ReactMethod
+    fun addListener(eventName: String) {
+        // Required for React Native NativeEventEmitter
+    }
+
+    @ReactMethod
+    fun removeListeners(count: Double) {
+        // Required for React Native NativeEventEmitter
+    }
 
     /**
      * Checks whether EasyHome is currently the device's default launcher/home app.

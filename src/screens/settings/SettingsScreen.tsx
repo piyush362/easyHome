@@ -1,5 +1,5 @@
 import React from 'react';
-import {View, StyleSheet} from 'react-native';
+import {View, StyleSheet, NativeModules, Linking} from 'react-native';
 import {
   Palette,
   Sparkles,
@@ -10,8 +10,9 @@ import {
   Users,
   ShieldAlert,
   Bell,
-  Clock,
   LayoutTemplate,
+  Home,
+  Settings as SettingsIcon,
 } from 'lucide-react-native';
 import type {RootStackScreenProps} from '../../navigation/types';
 import {useTheme} from '../../theme';
@@ -21,12 +22,33 @@ import {
   EHText,
   EHListItem,
   EHSection,
+  EHButton,
 } from '../../components';
+
+const {LauncherModule} = NativeModules;
 
 export default function SettingsScreen({
   navigation,
 }: RootStackScreenProps<'Settings'>) {
   const {colors, spacing} = useTheme();
+
+  const handleChangeLauncher = async () => {
+    try {
+      if (LauncherModule?.openHomeSettings) {
+        await LauncherModule.openHomeSettings();
+      } else if (LauncherModule?.requestSetDefaultLauncher) {
+        await LauncherModule.requestSetDefaultLauncher();
+      } else {
+        Linking.openSettings();
+      }
+    } catch (error) {
+      Linking.openSettings();
+    }
+  };
+
+  const handleOpenAppSettings = () => {
+    Linking.openSettings();
+  };
 
   return (
     <ScreenWrapper
@@ -36,7 +58,7 @@ export default function SettingsScreen({
           onBack={() => navigation.goBack()}
         />
       }>
-      <View style={[styles.container, {padding: spacing.md}]}>
+      <ScrollViewContent style={[styles.container, {padding: spacing.md}]}>
         {/* 1. Personalization */}
         <EHSection title="Personalization">
           <EHListItem
@@ -103,23 +125,51 @@ export default function SettingsScreen({
           />
         </EHSection>
 
-        {/* 4. Footer */}
+        {/* 4. Developer */}
+        <EHSection title="Developer">
+          <EHButton
+            label="Change Default Launcher"
+            variant="primary"
+            icon={<Home size={20} color="#FFFFFF" />}
+            onPress={handleChangeLauncher}
+            style={styles.actionBtn}
+          />
+          <EHButton
+            label="Open App Info & Permissions"
+            variant="outline"
+            icon={<SettingsIcon size={18} color={colors.primary} />}
+            onPress={handleOpenAppSettings}
+            style={styles.actionBtn}
+          />
+        </EHSection>
+
+        {/* 5. Footer */}
         <View style={styles.footer}>
           <EHText variant="caption" color={colors.textMuted} align="center">
             EasyHome v1.0.0
           </EHText>
         </View>
-      </View>
+      </ScrollViewContent>
     </ScreenWrapper>
   );
 }
 
+const ScrollViewContent = View;
+
 const styles = StyleSheet.create({
   container: {
     gap: 24,
+    paddingBottom: 32,
+  },
+  quickActionsContainer: {
+    gap: 12,
+    marginTop: 8,
+  },
+  actionBtn: {
+    minHeight: 52,
   },
   footer: {
-    paddingVertical: 20,
+    paddingVertical: 12,
     alignItems: 'center',
   },
 });

@@ -7,7 +7,9 @@
     "ios": "react-native run-ios",
     "lint": "eslint .",
     "start": "react-native start",
-    "test": "jest"
+    "test": "jest",
+    "adb-install": "adb install -r ./android/app/build/outputs/apk/release/app-release.apk",
+    "adb-copy-apk": "adb push ./android/app/build/outputs/apk/release/app-release.apk /sdcard/Download/"
   },
   "dependencies": {
     "@gorhom/bottom-sheet": "^5.2.14",
