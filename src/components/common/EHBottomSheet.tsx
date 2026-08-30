@@ -40,7 +40,7 @@ export function EHBottomSheet({
   style,
   testID,
 }: EHBottomSheetProps) {
-  const {colors, borderRadius, elevation} = useTheme();
+  const {colors, borderRadius, elevation, isDark} = useTheme();
   const insets = useSafeAreaInsets();
 
   const isFixedHeight = height !== 'auto' && height !== undefined;
@@ -60,12 +60,11 @@ export function EHBottomSheet({
               style={[
                 styles.sheet,
                 {
-                  backgroundColor: colors.surface,
+                  backgroundColor: isDark ? '#0F172A' : '#FFFFFF',
                   borderTopLeftRadius: borderRadius.xl,
                   borderTopRightRadius: borderRadius.xl,
                   borderColor: colors.border,
                   ...(isFixedHeight ? {height} : {maxHeight: '90%'}),
-                  ...elevation.high,
                 },
                 style,
               ]}>
@@ -75,7 +74,7 @@ export function EHBottomSheet({
                   styles.stickyHeader,
                   {
                     borderBottomColor: colors.border,
-                    backgroundColor: colors.surface,
+                    backgroundColor: isDark ? '#0F172A' : '#FFFFFF',
                   },
                 ]}>
                 {/* Drag Handle */}
@@ -145,7 +144,7 @@ export function EHBottomSheet({
                     styles.stickyFooter,
                     {
                       borderTopColor: colors.border,
-                      backgroundColor: colors.surface,
+                      backgroundColor: isDark ? '#0F172A' : '#FFFFFF',
                       paddingBottom: Math.max(insets.bottom + 10, 18),
                     },
                   ]}>

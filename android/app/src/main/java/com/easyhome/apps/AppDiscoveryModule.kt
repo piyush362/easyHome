@@ -5,8 +5,10 @@ import android.content.pm.PackageManager
 import android.content.pm.ResolveInfo
 import android.graphics.Bitmap
 import android.graphics.Canvas
+import android.graphics.drawable.AdaptiveIconDrawable
 import android.graphics.drawable.BitmapDrawable
 import android.graphics.drawable.Drawable
+import android.os.Build
 import android.util.Base64
 import com.facebook.react.bridge.*
 import java.io.ByteArrayOutputStream
@@ -37,8 +39,6 @@ class AppDiscoveryModule(private val reactContext: ReactApplicationContext) :
 
         for (resolveInfo in resolveInfos) {
           val packageName = resolveInfo.activityInfo.packageName
-          // Optional: we can list self or filter self if needed.
-          // Keeping self or filtering is fine; let's filter out EasyHome from launcher app list so it doesn't open itself in drawer
           if (packageName == selfPackageName) {
             continue
           }
@@ -47,7 +47,12 @@ class AppDiscoveryModule(private val reactContext: ReactApplicationContext) :
           var iconBase64 = ""
 
           try {
-            val drawable = resolveInfo.loadIcon(pm)
+            // Load high-resolution launcher icon
+            val drawable = try {
+              resolveInfo.activityInfo.loadIcon(pm)
+            } catch (e: Exception) {
+              resolveInfo.loadIcon(pm)
+            }
             iconBase64 = drawableToBase64(drawable)
           } catch (e: Exception) {
             // If icon conversion fails, proceed without icon
@@ -115,39 +120,28 @@ class AppDiscoveryModule(private val reactContext: ReactApplicationContext) :
   }
 
   /**
-   * Helper function to convert an Android Drawable into a Base64 encoded PNG string.
+   * Helper function to convert any Android Drawable into a sharp, high-res Base64 PNG.
    */
   private fun drawableToBase64(drawable: Drawable): String {
-    val bitmap: Bitmap = when {
-      drawable is BitmapDrawable && drawable.bitmap != null -> {
-        val src = drawable.bitmap
-        // Scale down if icon is overly large (max 144x144) to keep JSON payload lean
-        if (src.width > 144 || src.height > 144) {
-          Bitmap.createScaledBitmap(src, 128, 128, true)
-        } else {
-          src
-        }
+    val targetSize = 160 // Crisp high resolution (160x160)
+
+    val bitmap: Bitmap = if (drawable is BitmapDrawable && drawable.bitmap != null) {
+      val src = drawable.bitmap
+      if (src.width != targetSize || src.height != targetSize) {
+        Bitmap.createScaledBitmap(src, targetSize, targetSize, true)
+      } else {
+        src
       }
-      drawable.intrinsicWidth > 0 && drawable.intrinsicHeight > 0 -> {
-        val width = Math.min(drawable.intrinsicWidth, 128)
-        val height = Math.min(drawable.intrinsicHeight, 128)
-        val bmp = Bitmap.createBitmap(width, height, Bitmap.Config.ARGB_8888)
-        val canvas = Canvas(bmp)
-        drawable.setBounds(0, 0, canvas.width, canvas.height)
-        drawable.draw(canvas)
-        bmp
-      }
-      else -> {
-        val bmp = Bitmap.createBitmap(128, 128, Bitmap.Config.ARGB_8888)
-        val canvas = Canvas(bmp)
-        drawable.setBounds(0, 0, canvas.width, canvas.height)
-        drawable.draw(canvas)
-        bmp
-      }
+    } else {
+      val bmp = Bitmap.createBitmap(targetSize, targetSize, Bitmap.Config.ARGB_8888)
+      val canvas = Canvas(bmp)
+      drawable.setBounds(0, 0, canvas.width, canvas.height)
+      drawable.draw(canvas)
+      bmp
     }
 
     val outputStream = ByteArrayOutputStream()
-    bitmap.compress(Bitmap.CompressFormat.PNG, 90, outputStream)
+    bitmap.compress(Bitmap.CompressFormat.PNG, 95, outputStream)
     val byteArray = outputStream.toByteArray()
     return "data:image/png;base64," + Base64.encodeToString(byteArray, Base64.NO_WRAP)
   }

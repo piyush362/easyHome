@@ -6,6 +6,8 @@ import {
   DrawerColumns,
   IconShape,
   ClockStyle,
+  AppListLayout,
+  DrawerGrid,
 } from '../../types/models';
 import {saveAppearance} from '../../database/repository';
 
@@ -15,9 +17,11 @@ export const DEFAULT_APPEARANCE: AppearanceSettings = {
   iconSize: 'large',
   buttonSize: 'large',
   appearance: 'light',
-  drawerColumns: 5,
+  drawerColumns: 4,
   drawerIconShape: 'circle',
   clockStyle: 'frosted',
+  appListLayout: 'vertical',
+  drawerGrid: '4x5',
 };
 
 export interface SettingsState {
@@ -63,12 +67,24 @@ export const settingsSlice = createSlice({
       state.appearance.drawerColumns = action.payload;
       saveAppearance(state.appearance);
     },
+    setDrawerGrid: (state, action: PayloadAction<DrawerGrid>) => {
+      state.appearance.drawerGrid = action.payload;
+      const cols = parseInt(action.payload.split('x')[0], 10) as DrawerColumns;
+      if (cols === 3 || cols === 4 || cols === 5) {
+        state.appearance.drawerColumns = cols;
+      }
+      saveAppearance(state.appearance);
+    },
     setDrawerIconShape: (state, action: PayloadAction<IconShape>) => {
       state.appearance.drawerIconShape = action.payload;
       saveAppearance(state.appearance);
     },
     setClockStyle: (state, action: PayloadAction<ClockStyle>) => {
       state.appearance.clockStyle = action.payload;
+      saveAppearance(state.appearance);
+    },
+    setAppListLayout: (state, action: PayloadAction<AppListLayout>) => {
+      state.appearance.appListLayout = action.payload;
       saveAppearance(state.appearance);
     },
     resetAppearance: state => {
@@ -86,8 +102,10 @@ export const {
   setButtonSize,
   setAppearanceMode,
   setDrawerColumns,
+  setDrawerGrid,
   setDrawerIconShape,
   setClockStyle,
+  setAppListLayout,
   resetAppearance,
 } = settingsSlice.actions;
 

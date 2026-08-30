@@ -91,6 +91,9 @@ export type DrawerColumns = 3 | 4 | 5;
 export type IconShape = 'circle' | 'rounded' | 'square';
 export type ClockStyle = 'frosted' | 'minimal' | 'classic';
 
+export type AppListLayout = 'vertical' | 'paginated';
+export type DrawerGrid = '3x5' | '3x6' | '4x5' | '4x6';
+
 export interface AppearanceSettings {
   theme: ColorTheme;
   textSize: SizeScale;
@@ -100,6 +103,8 @@ export interface AppearanceSettings {
   drawerColumns?: DrawerColumns;
   drawerIconShape?: IconShape;
   clockStyle?: ClockStyle;
+  appListLayout?: AppListLayout;
+  drawerGrid?: DrawerGrid;
 }
 
 export interface SafetySettings {

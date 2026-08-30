@@ -98,6 +98,15 @@ jest.mock('react-native-image-picker', () => ({
   })),
 }));
 
+// Mock react-native-linear-gradient
+jest.mock('react-native-linear-gradient', () => {
+  const React = require('react');
+  const {View} = require('react-native');
+  return ({children, style, ...props}) => {
+    return React.createElement(View, {style, ...props}, children);
+  };
+});
+
 // Mock react-native-safe-area-context
 import mockSafeAreaContext from 'react-native-safe-area-context/jest/mock';
 jest.mock('react-native-safe-area-context', () => mockSafeAreaContext);

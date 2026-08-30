@@ -365,7 +365,7 @@ const styles = StyleSheet.create({
   },
   tileSquircle: {
     width: '100%',
-    aspectRatio: 1.2,
+    aspectRatio: 1.18,
     borderRadius: 16,
     alignItems: 'center',
     justifyContent: 'center',
@@ -378,9 +378,9 @@ const styles = StyleSheet.create({
     textAlign: 'center',
   },
   customIconImg: {
-    width: 32,
-    height: 32,
-    borderRadius: 8,
+    width: 42,
+    height: 42,
+    borderRadius: 10,
   },
   pagination: {
     bottom: -6,

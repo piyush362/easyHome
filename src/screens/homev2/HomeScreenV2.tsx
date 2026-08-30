@@ -313,6 +313,7 @@ export default function HomeScreenV2({
             <HomeV2FavoritesView
               familyMembers={familyMembers}
               onAddContact={() => navigation.navigate('Family')}
+              onSelectMember={setSelectedFamilyMember}
             />
           )}
 

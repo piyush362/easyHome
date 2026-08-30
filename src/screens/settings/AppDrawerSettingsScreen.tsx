@@ -1,18 +1,18 @@
 import React from 'react';
-import {View, StyleSheet, TouchableOpacity} from 'react-native';
+import {View, StyleSheet, TouchableOpacity, ScrollView} from 'react-native';
 import {
-  LayoutGrid,
-  Circle,
-  Square,
-  Sparkles,
+  List,
+  Layers,
   Check,
   Smartphone,
+  LayoutGrid,
 } from 'lucide-react-native';
 import type {RootStackScreenProps} from '../../navigation/types';
 import {
   useAppDispatch,
   useAppSelector,
-  setDrawerColumns,
+  setAppListLayout,
+  setDrawerGrid,
   setDrawerIconShape,
 } from '../../store';
 import {useTheme} from '../../theme';
@@ -23,22 +23,77 @@ import {
   EHCard,
   EHSection,
 } from '../../components';
-import {DrawerColumns, IconShape} from '../../types/models';
+import {AppListLayout, DrawerGrid, IconShape} from '../../types/models';
 
 export default function AppDrawerSettingsScreen({
   navigation,
 }: RootStackScreenProps<'AppDrawerSettings'>) {
-  const {colors, spacing, isDark} = useTheme();
+  const {colors, spacing, isDark, borderRadius} = useTheme();
   const dispatch = useAppDispatch();
   const settings = useAppSelector(state => state.settings.appearance);
 
-  const activeColumns: DrawerColumns = settings.drawerColumns || 5;
+  const activeLayout: AppListLayout = settings.appListLayout || 'vertical';
+  const activeGrid: DrawerGrid = settings.drawerGrid || '4x5';
   const activeShape: IconShape = settings.drawerIconShape || 'circle';
 
-  const columnOptions: {cols: DrawerColumns; label: string}[] = [
-    {cols: 3, label: '3 Apps Per Row (Largest)'},
-    {cols: 4, label: '4 Apps Per Row (Medium)'},
-    {cols: 5, label: '5 Apps Per Row (Standard)'},
+  const [activeColsStr, activeRowsStr] = activeGrid.split('x');
+  const activeCols = parseInt(activeColsStr, 10) || 4;
+
+  const layoutOptions: {
+    id: AppListLayout;
+    title: string;
+    description: string;
+    icon: (selected: boolean) => React.ReactNode;
+  }[] = [
+    {
+      id: 'vertical',
+      title: 'Vertical Scroll',
+      description: 'Continuous smooth vertical scrolling grid',
+      icon: selected => (
+        <List
+          size={22}
+          color={selected ? colors.primary : colors.textSecondary}
+        />
+      ),
+    },
+    {
+      id: 'paginated',
+      title: 'OneUI Swiper',
+      description: 'Horizontal paginated pages with dot navigation',
+      icon: selected => (
+        <Layers
+          size={22}
+          color={selected ? colors.primary : colors.textSecondary}
+        />
+      ),
+    },
+  ];
+
+  const gridOptions: {
+    grid: DrawerGrid;
+    title: string;
+    subtitle: string;
+  }[] = [
+    {
+      grid: '3x5',
+      title: '3x5 Grid',
+      subtitle: '3 cols × 5 rows • 15 apps per page • Large',
+    },
+    {
+      grid: '3x6',
+      title: '3x6 Grid',
+      subtitle: '3 cols × 6 rows • 18 apps per page • Tall',
+    },
+    {
+      grid: '4x5',
+      title: '4x5 Grid',
+      subtitle: '4 cols × 5 rows • 20 apps per page • Standard',
+    },
+    {
+      grid: '4x6',
+      title: '4x6 Grid',
+      subtitle: '4 cols × 6 rows • 24 apps per page • Compact',
+    },
   ];
 
   const shapeOptions: {
@@ -68,17 +123,20 @@ export default function AppDrawerSettingsScreen({
     <ScreenWrapper
       headerComponent={
         <HeaderNavigation
-          label="App Drawer"
+          label="App Drawer & Grid"
           onBack={() => navigation.goBack()}
         />
       }>
-      <View style={[styles.container, {padding: spacing.md}]}>
+      <ScrollView
+        style={styles.scrollContainer}
+        contentContainerStyle={[styles.container, {padding: spacing.md}]}
+        showsVerticalScrollIndicator={false}>
         {/* Live Interactive Preview */}
         <EHCard style={styles.previewCard} elevation="low">
           <View style={styles.previewHeaderRow}>
             <LayoutGrid size={22} color={colors.primary} />
             <EHText variant="body" weight="700">
-              Preview ({activeColumns} Columns • {activeShape.toUpperCase()})
+              Preview ({activeGrid} • {activeLayout === 'paginated' ? 'OneUI Swiper' : 'Vertical'})
             </EHText>
           </View>
 
@@ -94,7 +152,7 @@ export default function AppDrawerSettingsScreen({
               },
             ]}>
             <View style={styles.mockupGridRow}>
-              {Array.from({length: activeColumns}).map((_, idx) => {
+              {Array.from({length: activeCols}).map((_, idx) => {
                 const sampleColors = [
                   colors.primary,
                   colors.secondary,
@@ -134,39 +192,64 @@ export default function AppDrawerSettingsScreen({
           </View>
         </EHCard>
 
-        {/* 1. Grid Density */}
-        <EHSection title="Grid Density">
+        {/* 1. Layout Mode Section */}
+        <EHSection title="App List Layout">
           <View style={styles.optionsList}>
-            {columnOptions.map(opt => {
-              const isSelected = activeColumns === opt.cols;
+            {layoutOptions.map(opt => {
+              const isSelected = activeLayout === opt.id;
               return (
                 <TouchableOpacity
-                  key={opt.cols}
+                  key={opt.id}
                   activeOpacity={0.8}
-                  onPress={() => dispatch(setDrawerColumns(opt.cols))}
+                  onPress={() => dispatch(setAppListLayout(opt.id))}
                   style={[
                     styles.optionCard,
                     {
                       backgroundColor: isSelected
                         ? isDark
-                          ? 'rgba(56, 189, 248, 0.12)'
-                          : 'rgba(2, 132, 199, 0.08)'
+                          ? 'rgba(99, 102, 241, 0.15)'
+                          : 'rgba(99, 102, 241, 0.08)'
+                        : isDark
+                        ? 'rgba(255, 255, 255, 0.05)'
                         : colors.surface,
                       borderColor: isSelected ? colors.primary : colors.border,
                       borderWidth: isSelected ? 2 : 1,
+                      borderRadius: borderRadius.md,
                     },
                   ]}>
-                  <EHText variant="body" weight="700" style={styles.flexText}>
-                    {opt.label}
-                  </EHText>
+                  <View style={styles.optionLeftRow}>
+                    <View
+                      style={[
+                        styles.iconBadge,
+                        {
+                          backgroundColor: isSelected
+                            ? isDark
+                              ? 'rgba(99, 102, 241, 0.25)'
+                              : 'rgba(99, 102, 241, 0.12)'
+                            : isDark
+                            ? 'rgba(255, 255, 255, 0.08)'
+                            : 'rgba(0, 0, 0, 0.04)',
+                        },
+                      ]}>
+                      {opt.icon(isSelected)}
+                    </View>
+                    <View style={styles.optionTextCol}>
+                      <EHText variant="body" weight="700">
+                        {opt.title}
+                      </EHText>
+                      <EHText variant="caption" color={colors.textSecondary}>
+                        {opt.description}
+                      </EHText>
+                    </View>
+                  </View>
 
                   {isSelected && (
                     <View
                       style={[
-                        styles.activeCheckBadge,
+                        styles.checkCircle,
                         {backgroundColor: colors.primary},
                       ]}>
-                      <Check size={14} color="#FFFFFF" />
+                      <Check size={14} color="#FFFFFF" strokeWidth={3} />
                     </View>
                   )}
                 </TouchableOpacity>
@@ -175,79 +258,122 @@ export default function AppDrawerSettingsScreen({
           </View>
         </EHSection>
 
-        {/* 2. Icon Shape */}
-        <EHSection title="Icon Shape">
-          <View style={styles.optionsList}>
-            {shapeOptions.map(shape => {
-              const isSelected = activeShape === shape.id;
+        {/* 2. Grid Size Section (3x5, 3x6, 4x5, 4x6) */}
+        <EHSection title="Grid Size (OneUI Swiper & Drawer)">
+          <View style={styles.gridCardsWrap}>
+            {gridOptions.map(opt => {
+              const isSelected = activeGrid === opt.grid;
               return (
                 <TouchableOpacity
-                  key={shape.id}
+                  key={opt.grid}
                   activeOpacity={0.8}
-                  onPress={() => dispatch(setDrawerIconShape(shape.id))}
+                  onPress={() => dispatch(setDrawerGrid(opt.grid))}
                   style={[
-                    styles.optionCard,
+                    styles.gridSizeCard,
                     {
                       backgroundColor: isSelected
                         ? isDark
-                          ? 'rgba(56, 189, 248, 0.12)'
-                          : 'rgba(2, 132, 199, 0.08)'
+                          ? 'rgba(99, 102, 241, 0.15)'
+                          : 'rgba(99, 102, 241, 0.08)'
+                        : isDark
+                        ? 'rgba(255, 255, 255, 0.05)'
                         : colors.surface,
                       borderColor: isSelected ? colors.primary : colors.border,
                       borderWidth: isSelected ? 2 : 1,
+                      borderRadius: borderRadius.md,
+                    },
+                  ]}>
+                  <View style={styles.gridSizeLeft}>
+                    <EHText variant="body" weight="800" color={isSelected ? colors.primary : colors.textPrimary}>
+                      {opt.title}
+                    </EHText>
+                    <EHText variant="caption" color={colors.textSecondary}>
+                      {opt.subtitle}
+                    </EHText>
+                  </View>
+
+                  {isSelected && (
+                    <View
+                      style={[
+                        styles.checkCircle,
+                        {backgroundColor: colors.primary},
+                      ]}>
+                      <Check size={14} color="#FFFFFF" strokeWidth={3} />
+                    </View>
+                  )}
+                </TouchableOpacity>
+              );
+            })}
+          </View>
+        </EHSection>
+
+        {/* 3. Icon Shape Section */}
+        <EHSection title="Icon Shape">
+          <View style={styles.shapeRow}>
+            {shapeOptions.map(opt => {
+              const isSelected = activeShape === opt.id;
+              return (
+                <TouchableOpacity
+                  key={opt.id}
+                  activeOpacity={0.8}
+                  onPress={() => dispatch(setDrawerIconShape(opt.id))}
+                  style={[
+                    styles.shapeCard,
+                    {
+                      backgroundColor: isSelected
+                        ? isDark
+                          ? 'rgba(99, 102, 241, 0.15)'
+                          : 'rgba(99, 102, 241, 0.08)'
+                        : isDark
+                        ? 'rgba(255, 255, 255, 0.05)'
+                        : colors.surface,
+                      borderColor: isSelected ? colors.primary : colors.border,
+                      borderWidth: isSelected ? 2 : 1,
+                      borderRadius: borderRadius.md,
                     },
                   ]}>
                   <View
                     style={[
-                      styles.shapeSampleBox,
+                      styles.shapeIconPreview,
                       {
-                        backgroundColor: colors.primaryLight,
-                        borderColor: isSelected
+                        borderRadius: opt.borderRadius,
+                        backgroundColor: isSelected
                           ? colors.primary
-                          : colors.border,
-                        borderRadius: shape.borderRadius,
+                          : colors.primaryLight,
                       },
                     ]}>
-                    {shape.id === 'circle' && (
-                      <Circle size={20} color={colors.primary} />
-                    )}
-                    {shape.id === 'rounded' && (
-                      <Sparkles size={20} color={colors.primary} />
-                    )}
-                    {shape.id === 'square' && (
-                      <Square size={20} color={colors.primary} />
-                    )}
+                    <Smartphone
+                      size={20}
+                      color={isSelected ? '#FFFFFF' : colors.primary}
+                    />
                   </View>
-
-                  <EHText variant="body" weight="700" style={styles.flexText}>
-                    {shape.label}
+                  <EHText
+                    variant="caption"
+                    weight={isSelected ? '700' : '500'}
+                    color={isSelected ? colors.primary : colors.textPrimary}>
+                    {opt.label}
                   </EHText>
-
-                  {isSelected && (
-                    <View
-                      style={[
-                        styles.activeCheckBadge,
-                        {backgroundColor: colors.primary},
-                      ]}>
-                      <Check size={14} color="#FFFFFF" />
-                    </View>
-                  )}
                 </TouchableOpacity>
               );
             })}
           </View>
         </EHSection>
-      </View>
+      </ScrollView>
     </ScreenWrapper>
   );
 }
 
 const styles = StyleSheet.create({
+  scrollContainer: {
+    flex: 1,
+  },
   container: {
-    gap: 24,
+    gap: 20,
+    paddingBottom: 32,
   },
   previewCard: {
     padding: 16,
+    borderRadius: 20,
   },
   previewHeaderRow: {
     flexDirection: 'row',
@@ -256,10 +382,10 @@ const styles = StyleSheet.create({
     marginBottom: 12,
   },
   mockupContainer: {
-    paddingVertical: 14,
-    paddingHorizontal: 12,
-    borderRadius: 14,
+    borderRadius: 16,
     borderWidth: 1,
+    paddingVertical: 14,
+    paddingHorizontal: 8,
   },
   mockupGridRow: {
     flexDirection: 'row',
@@ -273,8 +399,8 @@ const styles = StyleSheet.create({
   mockupIcon: {
     width: 44,
     height: 44,
-    justifyContent: 'center',
     alignItems: 'center',
+    justifyContent: 'center',
   },
   mockupLabel: {
     width: 32,
@@ -282,30 +408,67 @@ const styles = StyleSheet.create({
     borderRadius: 3,
   },
   optionsList: {
-    gap: 14,
+    gap: 10,
   },
   optionCard: {
     flexDirection: 'row',
     alignItems: 'center',
-    padding: 14,
-    borderRadius: 14,
-    gap: 12,
+    justifyContent: 'space-between',
+    padding: 12,
   },
-  shapeSampleBox: {
-    width: 40,
-    height: 40,
-    borderWidth: 1.5,
-    justifyContent: 'center',
+  optionLeftRow: {
+    flexDirection: 'row',
     alignItems: 'center',
-  },
-  flexText: {
+    gap: 12,
     flex: 1,
   },
-  activeCheckBadge: {
+  iconBadge: {
+    width: 40,
+    height: 40,
+    borderRadius: 12,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  optionTextCol: {
+    flex: 1,
+    gap: 2,
+  },
+  gridCardsWrap: {
+    gap: 8,
+  },
+  gridSizeCard: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    padding: 12,
+  },
+  gridSizeLeft: {
+    flex: 1,
+    gap: 2,
+  },
+  checkCircle: {
     width: 22,
     height: 22,
     borderRadius: 11,
-    justifyContent: 'center',
     alignItems: 'center',
+    justifyContent: 'center',
+    marginLeft: 8,
+  },
+  shapeRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    gap: 8,
+  },
+  shapeCard: {
+    flex: 1,
+    alignItems: 'center',
+    paddingVertical: 14,
+    gap: 8,
+  },
+  shapeIconPreview: {
+    width: 40,
+    height: 40,
+    alignItems: 'center',
+    justifyContent: 'center',
   },
 });

@@ -4,31 +4,37 @@ import {
   ScrollView,
   StyleSheet,
   TouchableOpacity,
+  Image,
   Alert,
+  Dimensions,
 } from 'react-native';
 import {
   Phone,
-  MessageCircle,
   Plus,
-  Star,
   UserPlus,
-  Heart,
+  Users,
 } from 'lucide-react-native';
 import {useTheme} from '../../../theme';
-import {EHText, EHCard, EHAvatar, EHButton} from '../../../components';
+import {EHText, EHCard, EHButton} from '../../../components';
 import {FamilyMember} from '../../../types/models';
 import {ContactsService} from '../../../services';
 
 export interface HomeV2FavoritesViewProps {
   familyMembers: FamilyMember[];
   onAddContact: () => void;
+  onSelectMember?: (member: FamilyMember) => void;
 }
+
+const {width: SCREEN_WIDTH} = Dimensions.get('window');
+const CARD_WIDTH = Math.floor((SCREEN_WIDTH - 44) / 2);
+const CARD_HEIGHT = Math.round(CARD_WIDTH * 1.25);
 
 export function HomeV2FavoritesView({
   familyMembers,
   onAddContact,
+  onSelectMember,
 }: HomeV2FavoritesViewProps) {
-  const {colors, isDark, borderRadius} = useTheme();
+  const {colors, isDark} = useTheme();
 
   const handleCall = async (member: FamilyMember) => {
     try {
@@ -38,11 +44,9 @@ export function HomeV2FavoritesView({
     }
   };
 
-  const handleWhatsApp = async (member: FamilyMember) => {
-    try {
-      await ContactsService.openWhatsApp(member.phoneNumber);
-    } catch (error: any) {
-      Alert.alert('Cannot Message', `Failed to message ${member.name}: ${error?.message}`);
+  const handleTilePress = (member: FamilyMember) => {
+    if (onSelectMember) {
+      onSelectMember(member);
     }
   };
 
@@ -51,26 +55,26 @@ export function HomeV2FavoritesView({
       style={styles.scrollContainer}
       contentContainerStyle={styles.scrollContent}
       showsVerticalScrollIndicator={false}>
-      {/* Header Banner */}
-      <EHCard style={styles.headerCard} elevation="low">
+      {/* Header Bar */}
+      <EHCard style={styles.headerCard} elevation="none">
         <View style={styles.headerTitleRow}>
           <View
             style={[
               styles.headerIconBox,
               {
                 backgroundColor: isDark
-                  ? 'rgba(239, 68, 68, 0.18)'
-                  : '#FEE2E2',
+                  ? 'rgba(99, 102, 241, 0.18)'
+                  : 'rgba(99, 102, 241, 0.1)',
               },
             ]}>
-            <Heart size={24} color="#EF4444" fill="#EF4444" />
+            <Users size={20} color={colors.primary} />
           </View>
           <View style={styles.headerTextCol}>
-            <EHText variant="heading1" weight="700">
+            <EHText variant="heading2" weight="700">
               Favourite Contacts
             </EHText>
             <EHText variant="caption" color={colors.textSecondary}>
-              1-Tap quick call and message for family
+              Tap photo for options or tap Call directly
             </EHText>
           </View>
         </View>
@@ -78,13 +82,13 @@ export function HomeV2FavoritesView({
 
       {/* Empty State */}
       {familyMembers.length === 0 ? (
-        <EHCard style={styles.emptyCard} elevation="low">
+        <EHCard style={styles.emptyCard} elevation="none">
           <View
             style={[
               styles.emptyIconCircle,
               {backgroundColor: colors.primaryLight},
             ]}>
-            <UserPlus size={36} color={colors.primary} />
+            <UserPlus size={32} color={colors.primary} />
           </View>
           <EHText variant="heading2" weight="600" style={styles.emptyTitle}>
             No Favourites Added Yet
@@ -104,116 +108,77 @@ export function HomeV2FavoritesView({
           />
         </EHCard>
       ) : (
-        /* 2-Column Grid of Big Contact Tiles */
+        /* 2-Column Grid of Full-Card Image Contact Tiles */
         <View style={styles.gridContainer}>
-          {familyMembers.map((member, index) => (
-            <View
+          {familyMembers.map(member => (
+            <TouchableOpacity
               key={member.id}
+              activeOpacity={0.88}
+              onPress={() => handleTilePress(member)}
               style={[
-                styles.bigContactTile,
+                styles.contactTile,
                 {
-                  backgroundColor: colors.surface,
-                  borderColor: colors.border,
+                  backgroundColor: isDark ? '#1E293B' : '#E2E8F0',
+                  borderColor: isDark
+                    ? 'rgba(255, 255, 255, 0.14)'
+                    : 'rgba(0, 0, 0, 0.08)',
                 },
               ]}>
-              {/* Star Badge for Emergency Contact */}
-              {index === 0 && (
-                <View
-                  style={[
-                    styles.primaryBadge,
-                    {backgroundColor: colors.primary},
-                  ]}>
-                  <Star size={12} color="#FFFFFF" fill="#FFFFFF" />
+              {/* 1. Full Card Edge-to-Edge Image / Fallback Background */}
+              {member.photo ? (
+                <Image
+                  source={{uri: member.photo}}
+                  style={styles.fullImage}
+                  resizeMode="cover"
+                />
+              ) : (
+                <View style={styles.placeholderBg}>
                   <EHText
-                    variant="caption"
-                    weight="700"
-                    color="#FFFFFF"
-                    style={styles.primaryBadgeText}>
-                    PRIMARY
+                    variant="heading1"
+                    weight="800"
+                    color={colors.primary}
+                    style={styles.fallbackLetter}>
+                    {member.name.charAt(0).toUpperCase()}
                   </EHText>
                 </View>
               )}
 
-              {/* Large Avatar */}
-              <View style={styles.avatarBox}>
-                <EHAvatar source={member.photo} name={member.name} size={74} />
-              </View>
-
-              {/* Name & Relationship */}
-              <EHText
-                variant="body"
-                weight="700"
-                numberOfLines={1}
-                style={styles.memberName}>
-                {member.name}
-              </EHText>
-              <View
-                style={[
-                  styles.relationshipPill,
-                  {
-                    backgroundColor: isDark
-                      ? 'rgba(255, 255, 255, 0.08)'
-                      : 'rgba(0, 0, 0, 0.05)',
-                  },
-                ]}>
+              {/* 2. Frosted Dark Bottom Overlay for Text & Call Button */}
+              <View style={styles.bottomOverlay}>
+                {/* Contact Name (No relationship) */}
                 <EHText
-                  variant="caption"
-                  color={colors.textSecondary}
-                  weight="500"
-                  numberOfLines={1}>
-                  {member.relationship || 'Family'}
+                  variant="body"
+                  weight="800"
+                  numberOfLines={1}
+                  color="#FFFFFF"
+                  style={styles.memberName}>
+                  {member.name}
                 </EHText>
-              </View>
 
-              {/* 2 Big Action Buttons: Call & WhatsApp */}
-              <View style={styles.tileActionsRow}>
-                {/* 1-Tap Call Button */}
+                {/* 1-Tap Full-Width CALL Button */}
                 <TouchableOpacity
-                  style={[
-                    styles.actionBtn,
-                    {backgroundColor: '#16A34A'}, // Solid Green
-                  ]}
+                  style={styles.callButton}
                   onPress={() => handleCall(member)}
                   activeOpacity={0.8}
                   accessibilityRole="button"
                   accessibilityLabel={`Call ${member.name}`}>
-                  <Phone size={18} color="#FFFFFF" />
+                  <Phone size={15} color="#FFFFFF" strokeWidth={2.4} />
                   <EHText
                     variant="caption"
                     weight="800"
                     color="#FFFFFF"
-                    style={styles.actionBtnText}>
+                    style={styles.callButtonText}>
                     CALL
                   </EHText>
                 </TouchableOpacity>
-
-                {/* 1-Tap WhatsApp Button */}
-                <TouchableOpacity
-                  style={[
-                    styles.actionBtn,
-                    {backgroundColor: '#059669'}, // Solid Emerald
-                  ]}
-                  onPress={() => handleWhatsApp(member)}
-                  activeOpacity={0.8}
-                  accessibilityRole="button"
-                  accessibilityLabel={`WhatsApp ${member.name}`}>
-                  <MessageCircle size={18} color="#FFFFFF" />
-                  <EHText
-                    variant="caption"
-                    weight="800"
-                    color="#FFFFFF"
-                    style={styles.actionBtnText}>
-                    CHAT
-                  </EHText>
-                </TouchableOpacity>
               </View>
-            </View>
+            </TouchableOpacity>
           ))}
 
-          {/* "+ Add Contact" Big Tile */}
+          {/* "+ Add Contact" Card */}
           <TouchableOpacity
             style={[
-              styles.bigContactTile,
+              styles.contactTile,
               styles.addContactTile,
               {
                 backgroundColor: isDark
@@ -228,14 +193,18 @@ export function HomeV2FavoritesView({
             accessibilityLabel="Add another favourite contact">
             <View
               style={[
-                styles.addCircleBox,
-                {backgroundColor: colors.primaryLight},
+                styles.addSquareBox,
+                {
+                  backgroundColor: isDark
+                    ? 'rgba(99, 102, 241, 0.22)'
+                    : 'rgba(99, 102, 241, 0.12)',
+                },
               ]}>
-              <Plus size={36} color={colors.primary} />
+              <Plus size={32} color={colors.primary} strokeWidth={2.5} />
             </View>
             <EHText
               variant="body"
-              weight="800"
+              weight="700"
               color={colors.primary}
               style={styles.addTitle}>
               Add Contact
@@ -244,7 +213,7 @@ export function HomeV2FavoritesView({
               variant="caption"
               color={colors.textSecondary}
               style={styles.addSubtitle}>
-              Tap to add family or doctor
+              Family or doctor
             </EHText>
           </TouchableOpacity>
         </View>
@@ -258,42 +227,44 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   scrollContent: {
-    paddingBottom: 16,
+    paddingBottom: 24,
   },
   headerCard: {
-    padding: 16,
-    borderRadius: 22,
-    marginBottom: 14,
+    padding: 12,
+    borderRadius: 18,
+    marginBottom: 12,
+    borderWidth: 1,
   },
   headerTitleRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 12,
+    gap: 10,
   },
   headerIconBox: {
-    width: 46,
-    height: 46,
-    borderRadius: 23,
+    width: 38,
+    height: 38,
+    borderRadius: 12,
     alignItems: 'center',
     justifyContent: 'center',
   },
   headerTextCol: {
     flex: 1,
-    gap: 2,
+    gap: 1,
   },
   emptyCard: {
     padding: 24,
-    borderRadius: 22,
+    borderRadius: 20,
     alignItems: 'center',
     textAlign: 'center',
+    borderWidth: 1,
   },
   emptyIconCircle: {
-    width: 72,
-    height: 72,
-    borderRadius: 36,
+    width: 64,
+    height: 64,
+    borderRadius: 20,
     alignItems: 'center',
     justifyContent: 'center',
-    marginBottom: 14,
+    marginBottom: 12,
   },
   emptyTitle: {
     marginBottom: 6,
@@ -301,8 +272,8 @@ const styles = StyleSheet.create({
   },
   emptyDesc: {
     textAlign: 'center',
-    lineHeight: 22,
-    marginBottom: 18,
+    lineHeight: 20,
+    marginBottom: 16,
   },
   emptyAddBtn: {
     minWidth: 180,
@@ -311,89 +282,85 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     flexWrap: 'wrap',
     justifyContent: 'space-between',
-    rowGap: 14,
+    rowGap: 12,
   },
-  bigContactTile: {
-    width: '48%',
-    borderRadius: 24,
+  contactTile: {
+    width: CARD_WIDTH,
+    height: CARD_HEIGHT,
+    borderRadius: 20,
     borderWidth: 1,
-    padding: 14,
-    alignItems: 'center',
+    overflow: 'hidden',
     position: 'relative',
-    shadowColor: '#000000',
-    shadowOffset: {width: 0, height: 2},
-    shadowOpacity: 0.06,
-    shadowRadius: 8,
-    elevation: 3,
   },
-  primaryBadge: {
+  fullImage: {
+    width: '100%',
+    height: '100%',
     position: 'absolute',
-    top: 10,
-    right: 10,
-    flexDirection: 'row',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+  },
+  placeholderBg: {
+    flex: 1,
     alignItems: 'center',
-    gap: 3,
-    paddingHorizontal: 6,
-    paddingVertical: 2,
-    borderRadius: 8,
+    justifyContent: 'center',
+    paddingBottom: 50,
   },
-  primaryBadgeText: {
-    fontSize: 9,
-    lineHeight: 11,
-    letterSpacing: 0.5,
+  fallbackLetter: {
+    fontSize: 52,
+    lineHeight: 60,
   },
-  avatarBox: {
-    marginTop: 6,
-    marginBottom: 10,
+  bottomOverlay: {
+    position: 'absolute',
+    left: 0,
+    right: 0,
+    bottom: 0,
+    backgroundColor: 'rgba(15, 23, 42, 0.78)',
+    paddingHorizontal: 10,
+    paddingTop: 8,
+    paddingBottom: 10,
+    gap: 6,
+    borderTopWidth: 1,
+    borderTopColor: 'rgba(255, 255, 255, 0.1)',
   },
   memberName: {
-    fontSize: 16,
-    lineHeight: 20,
+    fontSize: 15,
+    lineHeight: 18,
     textAlign: 'center',
+  },
+  callButton: {
     width: '100%',
-  },
-  relationshipPill: {
-    paddingHorizontal: 8,
-    paddingVertical: 2,
-    borderRadius: 10,
-    marginTop: 4,
-    marginBottom: 12,
-  },
-  tileActionsRow: {
-    flexDirection: 'row',
-    gap: 8,
-    width: '100%',
-  },
-  actionBtn: {
-    flex: 1,
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    gap: 4,
-    paddingVertical: 10,
-    borderRadius: 14,
+    gap: 6,
+    paddingVertical: 7,
+    borderRadius: 12,
+    backgroundColor: '#16A34A', // Direct Green Call
   },
-  actionBtnText: {
+  callButtonText: {
     fontSize: 12,
     lineHeight: 14,
+    letterSpacing: 0.5,
   },
   addContactTile: {
     borderStyle: 'dashed',
     borderWidth: 1.5,
-    justifyContent: 'center',
-    minHeight: 200,
-  },
-  addCircleBox: {
-    width: 68,
-    height: 68,
-    borderRadius: 34,
     alignItems: 'center',
     justifyContent: 'center',
-    marginBottom: 12,
+  },
+  addSquareBox: {
+    width: 58,
+    height: 58,
+    borderRadius: 16,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginBottom: 10,
   },
   addTitle: {
-    fontSize: 16,
-    lineHeight: 20,
+    fontSize: 15,
+    lineHeight: 19,
     textAlign: 'center',
     marginBottom: 2,
   },
